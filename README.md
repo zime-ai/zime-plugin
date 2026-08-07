@@ -1,6 +1,6 @@
 # zime-internal-skills
 
-[![Skills](https://img.shields.io/badge/skills-1-blue)](skills/)
+[![Skills](https://img.shields.io/badge/skills-5-blue)](skills/)
 [![Internal](https://img.shields.io/badge/visibility-internal--only-red)](#visibility)
 
 The internal, Zime-only counterpart to
@@ -34,6 +34,10 @@ to the open repo instead.
 | Skill | Does | Coupling |
 |---|---|---|
 | [prep-note](skills/prep-note/) | Builds a pre-call prep note — meeting snapshot, deal state, who's who, prior-call history, likely objections, call objectives | zime-mcp `prep-note` tool (required when connected); local fallback from provided files |
+| [call-recap](skills/call-recap/) | Structured recap of one recorded call — overview, decisions, risks, action items by owner, open questions | zime-mcp `generate_call_recap` (required when connected); local fallback from a provided transcript |
+| [follow-up-email](skills/follow-up-email/) | Drafts the post-call follow-up email to the prospect, grounded in the call transcript; nothing is sent | zime-mcp `draft_follow_up_email` (required when connected); local fallback from a provided transcript |
+| [deal-objections](skills/deal-objections/) | Major objections in one deal across every linked call and CRM record — severity, addressed or open | zime-mcp `get_deal_objections` (required when connected); local fallback from provided files |
+| [deal-next-steps](skills/deal-next-steps/) | Next steps and upcoming meetings for one deal from its calls, commitments, and CRM state | zime-mcp `get_deal_next_steps` (required when connected); local fallback from provided files |
 <!-- SKILLS:END -->
 
 ## Install

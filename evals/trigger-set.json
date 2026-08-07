@@ -22,6 +22,30 @@
       "should_trigger": "prep-note"
     },
     {
+      "prompt": "Give me a recap of my Sprinto call from yesterday.",
+      "should_trigger": "call-recap"
+    },
+    {
+      "prompt": "I missed the Northwind demo — catch me up on what happened on that call.",
+      "should_trigger": "call-recap"
+    },
+    {
+      "prompt": "Draft the follow-up email for my Acme call this morning.",
+      "should_trigger": "follow-up-email"
+    },
+    {
+      "prompt": "What objections have come up in the Swisscom deal so far?",
+      "should_trigger": "deal-objections"
+    },
+    {
+      "prompt": "What are the next steps on the Acme expansion deal?",
+      "should_trigger": "deal-next-steps"
+    },
+    {
+      "prompt": "Does the Meridian deal have a real dated next step, or is it drifting?",
+      "should_trigger": "deal-next-steps"
+    },
+    {
       "prompt": "Review this discovery call and tell me what the rep missed on pain and decision process.",
       "should_trigger": null
     },
