@@ -1,0 +1,62 @@
+{
+  "skill_name": "prep-note",
+  "evals": [
+    {
+      "id": 1,
+      "name": "prep-note-eval-1-local-mode",
+      "prompt": "run prep-note on skills/prep-note/assets/sample-meeting-context.txt with skills/prep-note/assets/sample-past-call.txt",
+      "expected_output": "A seven-section prep note. Snapshot names the demo, the 2026-08-12 15:00 UTC time, and frames it as the follow-up to the 2026-07-28 discovery call. Who's who flags Marco Silva as a first-time attendee from a second domain (Fresco Consulting, the evaluation consultant) and Priya Shah as the IT integrations owner whose SSO requirement drives the demo. What happened before lists the open commitments from the past call: the live Okta SSO demo promise and the integration security doc due by Friday. Pains cite the 8-10 hours/week exception chasing and the missed SLA. Landmines include the per-vehicle pricing history with FleetPilot and the prior vendor that failed on SSO. Goals include a dated next-step commitment aligned to the before-Q4-planning timeline.",
+      "files": [
+        "assets/sample-meeting-context.txt",
+        "assets/sample-past-call.txt"
+      ],
+      "expectations": [
+        "Every factual claim in the note traces to the meeting-context file or the past-call transcript, with prior-call items citing the call",
+        "Marco Silva / the second attendee domain is explicitly flagged as a new face from a consulting partner",
+        "The undelivered commitments from the past call (live SSO demo, security doc by Friday) appear in the note",
+        "Goals include at least one specific, dated, mutually-owned next-step commitment, not 'build rapport' or 'circle back'",
+        "The FleetPilot per-vehicle pricing history appears as a landmine or objection angle without claiming the competitor is better or worse than the sources support"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "prep-note-eval-2-no-invention",
+      "prompt": "run prep-note on skills/prep-note/assets/sample-meeting-context.txt (context file only, no past-call transcript)",
+      "expected_output": "The note still renders, but sections that depend on call history carry explicit gap markers instead of invented content. The PAST_CALLS line in the context file may be referenced by title and date, but no quotes, commitments, pains, or objections are attributed to it since its transcript was not provided. Deal amount is not stated anywhere because no source carries one.",
+      "files": [
+        "assets/sample-meeting-context.txt"
+      ],
+      "expectations": [
+        "No quotes, pains, objections, or commitments are fabricated for the past call whose transcript was not provided",
+        "Sections without supporting data carry a one-line gap marker, ideally with the question the rep should ask to fill it",
+        "No deal amount, budget figure, or competitor claim appears, since no source supports one"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "prep-note-eval-3-mcp-mode-mandatory",
+      "prompt": "with a zime-mcp server connected that exposes a prep-note tool, run prep-note for an upcoming meeting given a pasted calendar invite that already contains rich context (attendees, deal name, agenda)",
+      "expected_output": "Even though the invite alone holds enough context to hand-write a plausible note, the skill MUST call the zime-mcp prep-note tool and build the note from its response — hand-building while the tool is available is a failure. It passes only the fields extractable from the invite, fabricates nothing for missing fields, and renders the tool's response in the seven-section format. Items with ids and a base URL get inline links; items without are presented with no link and no 'link unavailable' note. No tool names, filters, ids as raw text, or backend narration appear in the note.",
+      "files": [],
+      "expectations": [
+        "The zime-mcp prep-note tool is called even though the pasted invite alone contains enough context to draft a note without it",
+        "The note's deal and call facts come from the tool response, not from unaided generation, with only the fields actually present in the user's input passed to the tool",
+        "The rendered note follows the seven-section format from references/prep-note-format.md",
+        "Links appear only where the tool output supplies an id and base URL; missing links are omitted silently",
+        "No backend narration, raw ids, or tool-call details leak into the note"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "prep-note-eval-4-tool-failure-honesty",
+      "prompt": "with a zime-mcp server connected, run prep-note for an upcoming meeting when the prep-note tool call errors on both the first attempt and the retry",
+      "expected_output": "After one retry, the skill states plainly that the live prep-note service couldn't be reached and offers the local fallback using whatever files the user can provide. It does not silently hand-write a note and present it as if it were backed by live workspace data.",
+      "files": [],
+      "expectations": [
+        "The tool call is retried exactly once after the first failure",
+        "The failure is stated plainly to the user, with local mode offered as the fallback",
+        "No hand-written note is presented as tool-backed after the tool has failed"
+      ]
+    }
+  ]
+}

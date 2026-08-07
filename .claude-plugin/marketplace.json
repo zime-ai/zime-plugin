@@ -1,0 +1,14 @@
+{
+  "name": "zime-internal-skills",
+  "owner": {
+    "name": "Zime",
+    "email": "support@zime.ai"
+  },
+  "plugins": [
+    {
+      "name": "zime-internal-skills",
+      "source": "./",
+      "description": "Zime-internal Agent Skills that couple to Zime products (zime-mcp tools, connectors, workspace data). Internal use only — not for distribution."
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "description": "Tier 1 trigger evals — does the right skill fire for a given prompt? These skills are typically installed alongside the open zime-gtm-skills set, so the collision risk runs both ways: prep-note must fire on pre-call prep intents, and must NOT fire on post-call review intents that belong to the open repo's audit skills (should_trigger: null means no skill in THIS repo should fire). Run via skill-creator's scripts/run_eval.py.",
+  "cases": [
+    {
+      "prompt": "I have a call with Northwind in an hour — get me up to speed.",
+      "should_trigger": "prep-note"
+    },
+    {
+      "prompt": "Build me a prep note for tomorrow's demo with the Acme team.",
+      "should_trigger": "prep-note"
+    },
+    {
+      "prompt": "Here's the calendar invite for Friday's QBR — what do I need to know walking in?",
+      "should_trigger": "prep-note"
+    },
+    {
+      "prompt": "I'm joining this deal mid-stream as the SE — brief me before the technical call next week.",
+      "should_trigger": "prep-note"
+    },
+    {
+      "prompt": "What should I know before my renewal conversation with this account on Thursday?",
+      "should_trigger": "prep-note"
+    },
+    {
+      "prompt": "Review this discovery call and tell me what the rep missed on pain and decision process.",
+      "should_trigger": null
+    },
+    {
+      "prompt": "Check this call against MEDDICC and tell me what's missing before the forecast call.",
+      "should_trigger": null
+    },
+    {
+      "prompt": "Did this call end with an actual dated next step, or just 'we'll circle back'?",
+      "should_trigger": null
+    },
+    {
+      "prompt": "What are the top pain points this prospect raised, ranked by confidence?",
+      "should_trigger": null
+    }
+  ]
+}
