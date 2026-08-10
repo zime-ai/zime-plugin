@@ -1,5 +1,9 @@
 # Prep-note format
 
+This format governs LOCAL mode only — when the note is assembled from
+user-provided files. In MCP mode the `prep_note` tool returns finished
+markdown that is relayed as-is; do not restructure it to match this file.
+
 The note is for a rep walking into the call, possibly on a phone screen
 five minutes beforehand. Optimize for a 60-second read: bottom line first,
 specifics over generalities, language they can actually say out loud.
