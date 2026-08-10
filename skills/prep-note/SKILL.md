@@ -1,134 +1,119 @@
 ---
 name: prep-note
-description: Builds a pre-call prep note for an upcoming customer meeting — meeting snapshot, deal state, who's who, prior-call history, likely objections, and clear objectives for the call. Always calls the prep-note tool on the zime-mcp server when that server is connected — never hand-builds the note in its place — and only falls back to assembling the note locally from a meeting-context file plus past-call transcripts or a CRM export when no zime-mcp server is available. Use before any customer-facing call — discovery, demo, negotiation, QBR, or renewal.
+description: Generates a focused, tactical prep note for one upcoming (scheduled, future) customer call the rep is about to have — the single biggest risk or win condition, the rep's top 2-3 concrete moves, and links back into Zime. Use whenever someone wants to get ready for a specific upcoming meeting — "prep me for my Swisscom call tomorrow", "help me get ready for the Concerto demo", "brief me before my 3pm" — even if they never say "prep note". Always calls the prep_note tool on the zime-mcp server when connected — never hand-builds the note in its place — and handles its disambiguation flow (candidate meeting lists, pinning a calendar_event_id). Falls back to assembling a note locally from a meeting-context file plus past-call transcripts or a CRM export only when no zime-mcp server is available.
 license: MIT
 metadata:
   zime:category: cross-stage
   zime:dimension: initiative
-  zime:input-modes: meeting-context,transcript,csv,mcp
+  zime:input-modes: mcp,meeting-context,transcript,csv
 ---
 
 # Pre-Call Prep Note
 
-Gets a rep up to speed before a customer call: one skimmable note covering
-what the meeting is, where the deal stands, who's in the room, what happened
-on prior calls, and what this call needs to achieve.
+Gets a rep up to speed before a customer call. Zime generates the note from
+the meeting's CRM deal and account, its external attendees, and the
+relevant past calls — context no chat history can match. This skill's job
+is to reach that generator correctly and deliver the note it returns.
 
-Unlike the audit skills in this repo, this one is *generative* — it produces
-a forward-looking note, not a scored rubric. The same trust bar still
-applies: **every factual claim in the note traces to a source** (tool
-output, a provided transcript, a CRM field). Anything the sources don't
-support is marked as a gap, never guessed.
+## Routing
 
-## When to use this
+- Anything about PAST calls (recaps, "what objections came up") →
+  `call-recap` or `ask_zime`.
+- General deal or coaching questions not tied to preparing for one specific
+  upcoming call ("how do I win this deal") → `ask_zime`.
+- "What meetings do I have?" is a calendar listing, not preparing for one →
+  `ask_zime`.
+- Use this skill only when there is an upcoming, scheduled call AND the
+  user wants to prepare for it.
 
-- A rep has a customer call in the next few hours and wants a 60-second
-  brief instead of re-reading old notes.
-- A solutions engineer or leader is joining a deal mid-stream and needs
-  context fast.
-- A CSM is walking into a QBR or renewal conversation and wants prior
-  commitments and open issues in one place.
+## MCP mode (required when zime-mcp is connected)
 
-## Modes
+When a zime-mcp server exposes `prep_note` (fully qualified:
+`Zime:prep_note`; some clients surface it as
+`mcp__claude_ai_Zime__prep_note`), route the note through it. Hand-building
+the note from general knowledge while the tool is available is a failure of
+this skill, even when the user gave you enough context to write something
+plausible — the tool grounds every claim in the workspace's real calls and
+CRM.
 
-### MCP mode (REQUIRED when zime-mcp is connected)
+### Arguments
 
-**This skill is tool-first, not tool-optional.** Before doing anything
-else, check whether a `zime-mcp` server is connected and exposes a
-`prep-note` tool (search the available tools if it isn't already loaded).
-If it is, you MUST route the note through it — it has live access to the
-workspace's calls, deals, and accounts that no local file can match.
-Hand-building the note from general knowledge while the tool is available
-is a failure of this skill, even if the user gave you enough context to
-write something plausible.
+- `query` (required) — the user's request, minimally rewritten. Keep the
+  company or person named AND any time hint. Unlike the other Zime skills,
+  time words BELONG in this query: the tool matches against the rep's own
+  upcoming calendar meetings and parses "today", "tomorrow", "this week",
+  "next week", and weekday names itself to narrow the meeting first, then
+  matches the remaining words against attendee company domains, meeting
+  titles, and attendee names. Do not invent a company or time that was not
+  said.
+- `calendar_event_id` — only on a follow-up call, after the tool returned a
+  candidate list and the user picked a meeting (you may keep the same
+  query). Never invent one.
 
-1. Gather the meeting context from whatever the user gives you: a pasted
-   calendar invite, a deal or account name, attendee emails, or a
-   meeting-context block (see field reference below).
-2. Call the `prep-note` tool with that context — depending on the client
-   it may be exposed as `prep-note` or `prep_note` (e.g.
-   `mcp__claude_ai_Zime__prep_note` via the claude.ai connector); treat
-   either as the same tool. Pass the fields you have; do not fabricate
-   values for fields you don't.
-3. Render the tool's result in the output format from
-   `references/prep-note-format.md`. The tool's output is the source of
-   truth — do not add claims it doesn't support, and do not drop deal or
-   call facts it returned. Keep every recording or document link it
-   returns; if an item has no link, present it without one — silently,
-   never with a "link unavailable" note.
-4. If the tool call errors, retry once; if it still fails, say plainly
-   that the live prep-note service couldn't be reached and offer the
-   local fallback below — never silently substitute a hand-written note
-   and present it as tool-backed.
+**Example** — "prep me for my Swisscom call tomorrow":
 
-### Local mode (fallback, ONLY when no zime-mcp server is connected)
-
-Use this mode only when no zime-mcp server is available in the session.
-When you use it, open the note with one line saying it was built from
-provided files only, without live workspace data, and that connecting the
-zime-mcp server gives a richer note.
-
-No network calls, no credentials — build the note from files the user
-provides, same guarantee as every other skill in this repo:
-
-- **Meeting context** — a text block or pasted calendar invite: title,
-  date/time, attendees, account/deal name.
-- **Past-call transcripts** (`.txt`, `.vtt`, `.json`, `.md`) — optional,
-  one or more prior calls with this account.
-- **CRM export** (`.csv`) — optional, the deal/account row(s).
-
-```
-claude "run prep-note on ./meetings/northwind-demo-context.txt with ./calls/northwind-discovery.txt"
+```json
+{ "query": "prep me for my Swisscom call tomorrow" }
 ```
 
-Build each section of the note only from what those files contain. A
-section with no supporting data gets a one-line gap marker (for example,
-"No prior calls provided — ask the rep what's already been discussed")
-instead of plausible-sounding filler.
+### Outcomes
 
-## Meeting-context fields
+- **A prep note** (markdown) — deliver it per Output below. If the same
+  meeting was prepped recently, Zime returns the stored note quickly
+  instead of regenerating — that reuse is by design, not staleness.
+- **A candidate list** — a numbered text list of the rep's upcoming
+  meetings (up to 10), each line carrying its title, time (UTC), attendee
+  domains, and `calendar_event_id`. Show it, ask which meeting the user
+  means, then re-call with that `calendar_event_id`. If a pinned id comes
+  back rejected ("that meeting isn't in your upcoming calls"), the id was
+  stale or not the rep's own meeting — pick again from the fresh list the
+  tool re-offers.
+- **"You have no upcoming external meetings"** — nothing to prep; tell the
+  user plainly.
+- **"Prep notes aren't configured for your workspace yet"** — generation
+  needs workspace setup; tell the user to ask their Zime admin.
+- **"A prep note for this call is already being generated"** — another
+  request is mid-generation; wait a few seconds and call again once.
+- **An error** — `{"error": "<CODE>"}`. `INTERNAL_ERROR` is usually
+  transient: retry once. `UNAUTHORIZED` means the Zime connection needs
+  re-authorizing — say so. If it still fails, say plainly the prep-note
+  service couldn't be reached and offer the local fallback — never silently
+  substitute a hand-written note and present it as tool-backed.
 
-These are the fields the `prep-note` tool accepts and the local mode reads.
-All are optional except a meeting title or deal/account name — pass what
-you have:
-
-| Field | Meaning |
-|---|---|
-| `CONTEXT_LEVEL` | `deal` or `account` — what the note anchors on |
-| `ACCOUNT_NAME` / `ACCOUNT_ID` | the customer account |
-| `DEAL_NAME` / `DEAL_ID` | the specific opportunity |
-| `DEAL_STAGE` | current CRM stage |
-| `DEAL_OWNER` | rep who owns the deal |
-| `EXTERNAL_ATTENDEES` | customer-side attendee emails |
-| `ATTENDEE_DOMAIN` | attendee company domains — flags multi-party calls |
-| `INTERNAL_ATTENDEE_FUNCTIONS` | who's joining from your side (roles) |
-| `MEETING_TITLE` | the calendar title |
-| `DATE_TIME` | when the meeting happens (note timezone) |
-| `PAST_CALLS` | prior calls: id, date, title, attendee-overlap tag |
-
-`assets/sample-meeting-context.txt` is a synthetic example of this block.
+Note: the tool can only prep the rep's OWN meetings (where they are an
+attendee or the organizer). If the user asks to prep someone else's call,
+say that directly instead of retrying.
 
 ## Output
 
-Follow `references/prep-note-format.md` exactly. In short: seven sections —
-meeting snapshot, deal state, who's who, what happened before, likely pains
-and objections, goals for this call, landmines — skimmable in about a
-minute, bold on headings only, every claim sourced, gaps marked as gaps.
+The returned note is already the deliverable — a short brief with the
+single biggest risk or win condition, the rep's top 2-3 numbered moves, and
+links back into Zime:
 
-## Sample data
+- Relay the markdown as returned. Every claim in it traces to the
+  workspace's calls and CRM, so don't rewrite, re-rank, summarize, or
+  supplement it from other tools or memory.
+- Keep every link it returns; an item without a link is presented without
+  one — silently, never with a "link unavailable" note.
 
-- `assets/sample-meeting-context.txt` — synthetic meeting-context block.
-- `assets/sample-past-call.txt` — short synthetic prior call with the same
-  account, so local mode has history to draw on.
+## Local mode (only when no zime-mcp server is connected)
 
-Run the skill against both first to see real output before pointing it at
-your own meeting.
+Build the note from files the user provides — a meeting-context block or
+pasted calendar invite, optional past-call transcripts (`.txt`, `.vtt`,
+`.json`, `.md`), and an optional CRM export (`.csv`). Follow
+[references/prep-note-format.md](references/prep-note-format.md) exactly:
+seven sections, skimmable in a minute, every claim sourced, gaps marked as
+gaps ("No prior calls provided — ask the rep what's already been
+discussed") instead of plausible filler. Open with one line saying the note
+was built from provided files only, without live workspace data.
+
+Sample inputs to try first: `assets/sample-meeting-context.txt` (synthetic
+meeting-context block) and `assets/sample-past-call.txt` (synthetic prior
+call with the same account).
 
 ## What this sends where
 
-- **Local mode:** nothing leaves your machine. It reads the files you point
-  it at and nothing else.
-- **MCP mode:** the meeting context you provide is sent to the connected
-  Zime MCP server, which looks up calls and CRM data your workspace already
-  holds. If you don't want that, don't connect the server — local mode
-  works without it.
+MCP mode sends only the user's request wording (and, when pinning, a
+calendar_event_id) to the zime-mcp server, which looks up calls and CRM
+data the workspace already holds. Local mode reads only the files the user
+points it at — nothing leaves the machine.

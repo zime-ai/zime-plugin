@@ -34,27 +34,40 @@
     },
     {
       "id": 3,
-      "name": "prep-note-eval-3-mcp-mode-mandatory",
-      "prompt": "with a zime-mcp server connected that exposes a prep-note tool, run prep-note for an upcoming meeting given a pasted calendar invite that already contains rich context (attendees, deal name, agenda)",
-      "expected_output": "Even though the invite alone holds enough context to hand-write a plausible note, the skill MUST call the zime-mcp prep-note tool and build the note from its response — hand-building while the tool is available is a failure. It passes only the fields extractable from the invite, fabricates nothing for missing fields, and renders the tool's response in the seven-section format. Items with ids and a base URL get inline links; items without are presented with no link and no 'link unavailable' note. No tool names, filters, ids as raw text, or backend narration appear in the note.",
+      "name": "prep-note-eval-3-mcp-tool-mandate-and-query-shape",
+      "prompt": "with zime-mcp connected, user asks: 'prep me for my call with Swisscom tomorrow' — the conversation already contains notes about the Swisscom deal",
+      "expected_output": "The skill calls prep_note even though chat context could produce a plausible note. The query preserves the user's wording — the company name AND the time hint 'tomorrow' stay in the query (this tool parses time words itself, unlike the call/deal tools). No calendar_event_id is passed on the first call since none is known. The returned markdown note is relayed as returned — risk/win-condition, numbered moves, and Zime links intact — without rewriting, re-ranking, or supplementing from the conversation notes.",
       "files": [],
       "expectations": [
-        "The zime-mcp prep-note tool is called even though the pasted invite alone contains enough context to draft a note without it",
-        "The note's deal and call facts come from the tool response, not from unaided generation, with only the fields actually present in the user's input passed to the tool",
-        "The rendered note follows the seven-section format from references/prep-note-format.md",
-        "Links appear only where the tool output supplies an id and base URL; missing links are omitted silently",
-        "No backend narration, raw ids, or tool-call details leak into the note"
+        "prep_note is called rather than hand-building the note from chat context",
+        "The query keeps both the company name and the time hint ('tomorrow') — time words are NOT stripped into separate date arguments for this tool",
+        "No calendar_event_id is passed on the first call when none is known from the conversation",
+        "The returned markdown is relayed as returned, with every Zime link kept and nothing added from conversation memory"
       ]
     },
     {
       "id": 4,
-      "name": "prep-note-eval-4-tool-failure-honesty",
-      "prompt": "with a zime-mcp server connected, run prep-note for an upcoming meeting when the prep-note tool call errors on both the first attempt and the retry",
-      "expected_output": "After one retry, the skill states plainly that the live prep-note service couldn't be reached and offers the local fallback using whatever files the user can provide. It does not silently hand-write a note and present it as if it were backed by live workspace data.",
+      "name": "prep-note-eval-4-disambiguation-and-pinning",
+      "prompt": "with zime-mcp connected, prep_note returns a numbered candidate list of the rep's upcoming meetings (each line with a calendar_event_id) instead of a note; the user then picks the second meeting",
+      "expected_output": "The skill shows the candidate meetings (title, time, attendee domains), asks which one the user means, then re-calls prep_note with the chosen meeting's calendar_event_id (keeping the same query). If the pinned id came back rejected as not one of the rep's upcoming calls, the skill picks from the fresh list the tool re-offers rather than retrying the stale id. The final note is relayed as returned.",
       "files": [],
       "expectations": [
-        "The tool call is retried exactly once after the first failure",
-        "The failure is stated plainly to the user, with local mode offered as the fallback",
+        "The candidate list is shown to the user before any second tool call, with the meetings' titles and times",
+        "The second call passes the chosen calendar_event_id and may keep the original query unchanged",
+        "No calendar_event_id is invented or reused after the tool rejects it as stale",
+        "The final returned note is relayed without rewriting"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "prep-note-eval-5-special-responses-and-failure-honesty",
+      "prompt": "three scenarios with zime-mcp connected: (a) prep_note returns 'Prep notes aren't configured for your workspace yet'; (b) prep_note returns 'A prep note for this call is already being generated'; (c) prep_note errors with {\"error\":\"INTERNAL_ERROR\"} on both the first attempt and the retry",
+      "expected_output": "For (a) the skill tells the user prep notes need workspace setup and to ask their Zime admin — it does not hand-write a substitute note. For (b) it waits briefly and calls again once, since another generation is mid-flight. For (c), after exactly one retry, it states plainly that the prep-note service couldn't be reached and offers the local fallback with whatever files the user can provide — never presenting a hand-written note as tool-backed.",
+      "files": [],
+      "expectations": [
+        "The not-configured response is relayed as a setup issue for the Zime admin, with no hand-built substitute note",
+        "The already-generating response leads to one short wait and one re-call, not an error message",
+        "The INTERNAL_ERROR is retried exactly once, then the failure is stated plainly with local mode offered",
         "No hand-written note is presented as tool-backed after the tool has failed"
       ]
     }
