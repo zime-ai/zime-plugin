@@ -1,13 +1,15 @@
-# zime-internal-skills
+# zime-plugin
 
 [![Skills](https://img.shields.io/badge/skills-5-blue)](skills/)
 [![Internal](https://img.shields.io/badge/visibility-internal--only-red)](#visibility)
 
-The internal, Zime-only counterpart to
-[zime-gtm-skills](https://github.com/zime-ai/zime-gtm-skills). The open
-repo holds skills that run standalone on a local file with no product
-coupling; **this repo holds the skills that couple to Zime products** —
-zime-mcp tools, connectors, workspace data — and therefore can't go open
+The internal, Zime-only Claude Code plugin: Agent Skills coupled to Zime
+products, bundled with the Zime MCP connector config so installing the
+plugin wires up both together. The counterpart open repo is
+[zime-gtm-skills](https://github.com/zime-ai/zime-gtm-skills), which holds
+skills that run standalone on a local file with no product coupling;
+**this repo holds the skills (and the connector) that couple to Zime
+products** — zime-mcp tools, workspace data — and therefore can't go open
 source.
 
 Same format (the [Agent Skills](https://agentskills.io) spec), same
@@ -44,13 +46,18 @@ to the open repo instead.
 
 ```bash
 # Claude Code plugin (needs access to the private repo)
-/plugin marketplace add zime-ai/zime-internal-skills
-/plugin install zime-internal-skills@zime-internal-skills
+/plugin marketplace add zime-ai/zime-plugin
+/plugin install zime-plugin@zime-plugin
 ```
+
+Installing the plugin also registers the bundled Zime MCP connector
+(`.mcp.json`, pointing at `https://mcp.zime.ai/mcp`) — the first tool call
+opens a browser for the standard Zime OAuth login. See
+[Connector](#connector) below.
 
 ```bash
 # or copy a skill straight into a project
-cp -r zime-internal-skills/skills/prep-note .claude/skills/
+cp -r zime-plugin/skills/prep-note .claude/skills/
 ```
 
 ## Validate
@@ -74,11 +81,35 @@ Per-skill `evals/evals.json` plus a repo-level `evals/trigger-set.json`
 belong to the open repo's skills). Tool-coupled skills additionally carry
 a tool-mandate case and an honest-failure case — see [EVALS.md](EVALS.md).
 
+## Connector
+
+`.mcp.json` bundles the Zime MCP connector so installing this plugin
+registers it alongside the skills:
+
+```json
+{
+  "mcpServers": {
+    "zime": {
+      "type": "http",
+      "url": "https://mcp.zime.ai/mcp",
+      "oauth": { "clientId": "zime-mcp" }
+    }
+  }
+}
+```
+
+It's the same remote, OAuth-gated MCP server (`core/src/modules/mcp/` in
+`zime-nodejs-microservices`) already reachable as the "Zime" connector on
+claude.ai — per-user RBAC, no static API key. First tool call opens a
+browser for Zime login; the session then persists (7 days). See that
+repo's `core/docs/mcp/MCP_SERVER.md` for the engineering reference.
+
 ## Structure
 
 ```
-zime-internal-skills/
-├── .claude-plugin/          # /plugin marketplace add zime-ai/zime-internal-skills
+zime-plugin/
+├── .claude-plugin/          # /plugin marketplace add zime-ai/zime-plugin
+├── .mcp.json                # bundled Zime MCP connector config
 ├── .github/workflows/       # CI: validators + skills-ref + PR review agent
 ├── skills/
 │   └── skill-name/
