@@ -1,0 +1,40 @@
+{
+  "skill_name": "pipeline-review",
+  "evals": [
+    {
+      "id": 1,
+      "name": "pipeline-review-eval-1-tool-mandate-no-loop",
+      "prompt": "with zime-mcp connected, user asks: 'what's stuck in my pipeline this quarter?' — the conversation already contains a note naming three deals the user mentioned recently",
+      "expected_output": "The skill calls ask_zime once with the aggregate question. It does not call get_deal in a loop over the three previously-mentioned deal names to assemble a pipeline view itself.",
+      "files": [],
+      "expectations": [
+        "ask_zime is called for the aggregate question",
+        "get_deal is not called in a loop to stitch together a pipeline view",
+        "The question preserves the user's stated scope ('my pipeline', 'this quarter')"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "pipeline-review-eval-2-drilldown-uses-get-deal",
+      "prompt": "ask_zime's pipeline answer flags 'Acme expansion' as stalled; the user then asks 'what stage is that in?'",
+      "expected_output": "The skill calls get_deal for the single named deal rather than re-running the pipeline-wide ask_zime call or answering from the pipeline summary's own wording.",
+      "files": [],
+      "expectations": [
+        "get_deal is called for the single-deal follow-up",
+        "ask_zime is not re-called for a single-deal drill-down",
+        "The stage is taken from get_deal's result, not re-derived from the earlier pipeline answer"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "pipeline-review-eval-3-honest-failure",
+      "prompt": "ask_zime declines the pipeline question (no access to the requested scope)",
+      "expected_output": "The skill states the decline plainly and does not substitute a guessed list of at-risk deals.",
+      "files": [],
+      "expectations": [
+        "The decline is relayed plainly",
+        "No deal list or risk assessment is fabricated in its place"
+      ]
+    }
+  ]
+}

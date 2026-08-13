@@ -1,0 +1,40 @@
+{
+  "skill_name": "sales-cs-handover",
+  "evals": [
+    {
+      "id": 1,
+      "name": "sales-cs-handover-eval-1-tool-mandate-three-calls",
+      "prompt": "with zime-mcp connected, user asks: 'put together a handover for the Acme deal' — the conversation already contains notes about Acme's stakeholders",
+      "expected_output": "The skill calls get_deal first, then get_deal_next_steps and ask_zime (for stakeholders and risks), reusing the resolved deal_id/account name across calls. It does not answer the stakeholders section from the earlier notes.",
+      "files": [],
+      "expectations": [
+        "get_deal is called before get_deal_next_steps and ask_zime",
+        "The resolved deal_id or account name is reused rather than re-triggering disambiguation",
+        "Stakeholder info comes from the ask_zime call, not the earlier notes"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "sales-cs-handover-eval-2-objections-framed-as-risk-not-coaching",
+      "prompt": "the ask_zime risk question surfaces an unresolved pricing objection",
+      "expected_output": "The handover presents it under 'risks CS should watch,' not as objection-handling coaching, and does not call get_deal_objections for this purpose.",
+      "files": [],
+      "expectations": [
+        "get_deal_objections is not called by this skill for the risk section",
+        "The objection is framed as a risk to watch, not as coaching guidance"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "sales-cs-handover-eval-3-honest-failure-partial-packet",
+      "prompt": "get_deal resolves successfully, but get_deal_next_steps errors on both the first attempt and the retry",
+      "expected_output": "The handover delivers the CRM snapshot and (if successful) the stakeholder/risk sections, and states plainly that the commitments section couldn't be retrieved rather than fabricating a plausible commitments list.",
+      "files": [],
+      "expectations": [
+        "Exactly one retry on the failing call before giving up",
+        "The commitments section is marked as unavailable, not filled in",
+        "The rest of the packet is still delivered"
+      ]
+    }
+  ]
+}

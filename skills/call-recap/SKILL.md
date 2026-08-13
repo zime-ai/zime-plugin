@@ -19,7 +19,7 @@ deliver what it returns, whole.
 ## Routing
 
 - Custom questions about a call ("did they mention pricing?") → `ask_zime`.
-- Prep for an upcoming meeting → `prep-note`.
+- Prep for an upcoming meeting → `call-prep`.
 - Cross-call or company-wide patterns → `ask_zime`. The agent behind this
   tool is pinned server-side to one call and will decline anything broader,
   so routing wide questions here wastes the call.

@@ -1,0 +1,39 @@
+{
+  "skill_name": "deal-strategy",
+  "evals": [
+    {
+      "id": 1,
+      "name": "deal-strategy-eval-1-objections-routes-to-get-deal-objections",
+      "prompt": "with zime-mcp connected, user asks: 'what pushback have we gotten on the Meridian deal?'",
+      "expected_output": "The skill calls get_deal_objections rather than ask_zime, since the request is specifically and only about objections in one named deal.",
+      "files": [],
+      "expectations": [
+        "get_deal_objections is called, not ask_zime, for a pure objections question",
+        "The query contains the deal/account name, not a full sentence"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "deal-strategy-eval-2-strategy-routes-to-ask-zime",
+      "prompt": "user asks: 'why are we losing to Concerto Robotics on the Acme deal, and what should the rep do?'",
+      "expected_output": "The skill calls ask_zime rather than get_deal_objections, since the request is prescriptive/comparative, not a pure objections lookup.",
+      "files": [],
+      "expectations": [
+        "ask_zime is called for the prescriptive strategy question",
+        "get_deal_objections is not called for a question broader than pure objections"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "deal-strategy-eval-3-honest-failure",
+      "prompt": "get_deal_objections returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
+      "expected_output": "After exactly one retry, the skill states plainly the deal-analysis service couldn't be reached and offers the transcript/CRM-export fallback. It does not substitute a from-memory objection list.",
+      "files": [],
+      "expectations": [
+        "Exactly one retry before giving up",
+        "The failure is stated plainly with the local fallback offered",
+        "No objection list is fabricated from memory"
+      ]
+    }
+  ]
+}

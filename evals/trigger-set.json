@@ -1,25 +1,25 @@
 {
-  "description": "Tier 1 trigger evals — does the right skill fire for a given prompt? These skills are typically installed alongside the open zime-gtm-skills set, so the collision risk runs both ways: prep-note must fire on pre-call prep intents, and must NOT fire on post-call review intents that belong to the open repo's audit skills (should_trigger: null means no skill in THIS repo should fire). Run via skill-creator's scripts/run_eval.py.",
+  "description": "Tier 1 trigger evals — does the right skill fire for a given prompt? These skills are typically installed alongside the open zime-gtm-skills set, so the collision risk runs both ways: e.g. call-prep must fire on pre-call prep intents, and must NOT fire on post-call review intents that belong to the open repo's audit skills (should_trigger: null means no skill in THIS repo should fire). Run via skill-creator's scripts/run_eval.py.",
   "cases": [
     {
       "prompt": "I have a call with Northwind in an hour — get me up to speed.",
-      "should_trigger": "prep-note"
+      "should_trigger": "call-prep"
     },
     {
       "prompt": "Build me a prep note for tomorrow's demo with the Acme team.",
-      "should_trigger": "prep-note"
+      "should_trigger": "call-prep"
     },
     {
       "prompt": "Here's the calendar invite for Friday's QBR — what do I need to know walking in?",
-      "should_trigger": "prep-note"
+      "should_trigger": "call-prep"
     },
     {
       "prompt": "I'm joining this deal mid-stream as the SE — brief me before the technical call next week.",
-      "should_trigger": "prep-note"
+      "should_trigger": "call-prep"
     },
     {
       "prompt": "What should I know before my renewal conversation with this account on Thursday?",
-      "should_trigger": "prep-note"
+      "should_trigger": "call-prep"
     },
     {
       "prompt": "Give me a recap of my Northwind call from yesterday.",
@@ -31,19 +31,71 @@
     },
     {
       "prompt": "Draft the follow-up email for my Acme call this morning.",
-      "should_trigger": "follow-up-email"
+      "should_trigger": "follow-up"
     },
     {
-      "prompt": "What objections have come up in the Meridian deal so far?",
-      "should_trigger": "deal-objections"
+      "prompt": "What pushback have we gotten in the Meridian deal so far?",
+      "should_trigger": "deal-strategy"
+    },
+    {
+      "prompt": "How do I win the Northwind deal — what should the rep do differently?",
+      "should_trigger": "deal-strategy"
     },
     {
       "prompt": "What are the next steps on the Acme expansion deal?",
-      "should_trigger": "deal-next-steps"
+      "should_trigger": "actions-commitments"
     },
     {
       "prompt": "Does the Meridian deal have a real dated next step, or is it drifting?",
-      "should_trigger": "deal-next-steps"
+      "should_trigger": "actions-commitments"
+    },
+    {
+      "prompt": "What are my action items across all my deals this week?",
+      "should_trigger": "actions-commitments"
+    },
+    {
+      "prompt": "Who owns the Acme account on our side?",
+      "should_trigger": "get-account"
+    },
+    {
+      "prompt": "What stage is the Northwind renewal in right now?",
+      "should_trigger": "get-deal"
+    },
+    {
+      "prompt": "When was my last call with Concerto, and who was on it?",
+      "should_trigger": "get-meeting"
+    },
+    {
+      "prompt": "Pull the full transcript from my Acme call yesterday.",
+      "should_trigger": "get-transcript"
+    },
+    {
+      "prompt": "What did we email Acme last week about pricing?",
+      "should_trigger": "get-email"
+    },
+    {
+      "prompt": "Get me up to speed on the Acme account before the QBR.",
+      "should_trigger": "account-research"
+    },
+    {
+      "prompt": "Build me a mini case study of how Northwind uses us for the deck.",
+      "should_trigger": "sales-asset-builder"
+    },
+    {
+      "prompt": "Put together a handover for the Acme deal before CS takes it over.",
+      "should_trigger": "sales-cs-handover"
+    },
+    {
+      "prompt": "What's stuck in my pipeline this quarter?",
+      "should_trigger": "pipeline-review"
+    },
+    {
+      "prompt": "What's on my plate today?",
+      "should_trigger": "daily-briefing"
+    },
+    {
+      "prompt": "Why do we keep losing to Borealis Systems?",
+      "should_trigger": "competitive-intelligence"
     },
     {
       "prompt": "Review this discovery call and tell me what the rep missed on pain and decision process.",

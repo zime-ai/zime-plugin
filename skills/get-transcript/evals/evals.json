@@ -1,0 +1,39 @@
+{
+  "skill_name": "get-transcript",
+  "evals": [
+    {
+      "id": 1,
+      "name": "get-transcript-eval-1-tool-mandate",
+      "prompt": "with zime-mcp connected, user asks: 'what exactly did they say about pricing on the Acme call?' — the conversation already contains a recap that mentions pricing",
+      "expected_output": "The skill calls get_transcript rather than quoting the earlier recap, and answers the pricing question by quoting directly from the returned transcript.",
+      "files": [],
+      "expectations": [
+        "get_transcript is called rather than reusing the earlier recap as a source of quotes",
+        "The pricing answer is a direct quote from the returned transcript, not a paraphrase from the recap"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "get-transcript-eval-2-no-connection-no-fabrication",
+      "prompt": "no zime-mcp server is connected; user asks: 'pull the transcript from my Acme call'",
+      "expected_output": "The skill states plainly that it has no local fallback and the transcript isn't available without a Zime connection. It does not fabricate a transcript from a title, memory, or a related recap.",
+      "files": [],
+      "expectations": [
+        "The skill states the transcript is unavailable without a zime-mcp connection",
+        "No transcript content is fabricated"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "get-transcript-eval-3-honest-failure",
+      "prompt": "get_transcript returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
+      "expected_output": "After exactly one retry, the skill states plainly that the transcript service couldn't be reached. It does not substitute a remembered or invented quote.",
+      "files": [],
+      "expectations": [
+        "Exactly one retry before giving up",
+        "The failure is stated plainly",
+        "No quote is fabricated after the failure"
+      ]
+    }
+  ]
+}
