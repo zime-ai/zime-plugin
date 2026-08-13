@@ -10,10 +10,13 @@ are allowed — expected — to couple to Zime products: zime-mcp tools,
 connectors, live workspace data. That coupling is exactly why they live
 here instead of the open repo.
 
-- **Name**: zime-internal-skills
+- **Name**: zime-plugin
 - **Visibility**: private, Zime internal only — never open-source or
   mirror publicly
 - **Maintained by**: [Zime](https://zime.ai)
+- **Contains**: `skills/` (this repo's Agent Skills) plus a bundled MCP
+  server config (`.mcp.json`) pointing at the live Zime MCP connector at
+  `mcp.zime.ai` — installing the plugin registers both together.
 
 ## What goes in which repo
 
@@ -28,10 +31,11 @@ the open repo before it lands.
 ## Repository structure
 
 ```
-zime-internal-skills/
+zime-plugin/
 ├── .claude-plugin/
 │   ├── marketplace.json
 │   └── plugin.json
+├── .mcp.json                  # bundled Zime MCP connector config
 ├── skills/
 │   └── skill-name/
 │       ├── SKILL.md          # required
