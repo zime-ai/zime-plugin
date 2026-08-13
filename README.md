@@ -1,6 +1,6 @@
 # zime-plugin
 
-[![Skills](https://img.shields.io/badge/skills-5-blue)](skills/)
+[![Skills](https://img.shields.io/badge/skills-16-blue)](skills/)
 [![Internal](https://img.shields.io/badge/visibility-internal--only-red)](#visibility)
 
 The internal, Zime-only Claude Code plugin: Agent Skills coupled to Zime
@@ -35,11 +35,22 @@ to the open repo instead.
 <!-- SKILLS:START -->
 | Skill | Does | Coupling |
 |---|---|---|
-| [prep-note](skills/prep-note/) | Builds a pre-call prep note — meeting snapshot, deal state, who's who, prior-call history, likely objections, call objectives | zime-mcp `prep-note` tool (required when connected); local fallback from provided files |
+| [get-account](skills/get-account/) | Looks up one CRM account record — domain, industry, owner | zime-mcp `get_account` (required when connected); local fallback from a CRM export |
+| [get-deal](skills/get-deal/) | Looks up one CRM deal record — stage, amount, owner, close date | zime-mcp `get_deal` (required when connected); local fallback from a CRM export |
+| [get-meeting](skills/get-meeting/) | Looks up one meeting/call's metadata — title, date, attendees, linked deal | zime-mcp `get_call` (required when connected); local fallback from a provided transcript/invite |
+| [get-transcript](skills/get-transcript/) | Gets the full verbatim transcript for one call | zime-mcp `get_transcript` (required when connected); no local fallback |
+| [get-email](skills/get-email/) | Placeholder for looking up one email — no backing tool yet, so it always declines honestly | none yet — blocked on a connector tool; see the skill's Status note |
+| [call-prep](skills/call-prep/) | Builds a pre-call prep note — meeting snapshot, deal state, who's who, prior-call history, likely objections, call objectives | zime-mcp `prep_note` tool (required when connected); local fallback from provided files |
 | [call-recap](skills/call-recap/) | Structured recap of one recorded call — overview, decisions, risks, action items by owner, open questions | zime-mcp `generate_call_recap` (required when connected); local fallback from a provided transcript |
-| [follow-up-email](skills/follow-up-email/) | Drafts the post-call follow-up email to the prospect, grounded in the call transcript; nothing is sent | zime-mcp `draft_follow_up_email` (required when connected); local fallback from a provided transcript |
-| [deal-objections](skills/deal-objections/) | Major objections in one deal across every linked call and CRM record — severity, addressed or open | zime-mcp `get_deal_objections` (required when connected); local fallback from provided files |
-| [deal-next-steps](skills/deal-next-steps/) | Next steps and upcoming meetings for one deal from its calls, commitments, and CRM state | zime-mcp `get_deal_next_steps` (required when connected); local fallback from provided files |
+| [follow-up](skills/follow-up/) | Drafts the post-call follow-up email to the prospect, grounded in the call transcript; nothing is sent | zime-mcp `draft_follow_up_email` (required when connected); local fallback from a provided transcript |
+| [deal-strategy](skills/deal-strategy/) | Objections in one deal, plus prescriptive coaching — how to win, why a deal is stalling, positioning vs. a competitor | zime-mcp `get_deal_objections` + `ask_zime` (required when connected); local fallback for the objections half only |
+| [actions-commitments](skills/actions-commitments/) | Next steps for one deal (committed/scheduled/recommended, kept separate), plus personal or cross-deal action items | zime-mcp `get_deal_next_steps` + `ask_zime` (required when connected); local fallback for the single-deal half only |
+| [account-research](skills/account-research/) | Research brief on one account — CRM facts plus a synthesized narrative of deal history, sentiment, risk, and stakeholders | zime-mcp `get_account` + `ask_zime` (required when connected); local fallback from a CRM export and/or transcripts |
+| [sales-asset-builder](skills/sales-asset-builder/) | Builds rep-facing sales collateral (proof points, a case-study writeup, battlecard section) from real call/CRM evidence only | zime-mcp `ask_zime` + `get_transcript`/`get_account`/`get_deal` (required when connected); local fallback from provided files |
+| [sales-cs-handover](skills/sales-cs-handover/) | Assembles the Sales-to-CS handoff packet — deal state, stakeholders, commitments, technical risks CS should watch | zime-mcp `get_deal` + `get_deal_next_steps` + `ask_zime` (required when connected); local fallback from provided files |
+| [pipeline-review](skills/pipeline-review/) | Pipeline health across many deals — at-risk, stalled, missing next steps, forecast commentary | zime-mcp `ask_zime` (required when connected); local fallback from a multi-deal CRM export |
+| [daily-briefing](skills/daily-briefing/) | Orchestrated "what's on my plate today" — meetings, deals needing attention, action items due | zime-mcp `ask_zime` (required when connected); no local fallback |
+| [competitive-intelligence](skills/competitive-intelligence/) | Cross-deal/cross-call view of how the team is doing against a named competitor | zime-mcp `ask_zime` + `get_transcript` (required when connected); local fallback from provided transcripts |
 <!-- SKILLS:END -->
 
 ## Install
@@ -57,7 +68,7 @@ opens a browser for the standard Zime OAuth login. See
 
 ```bash
 # or copy a skill straight into a project
-cp -r zime-plugin/skills/prep-note .claude/skills/
+cp -r zime-plugin/skills/call-prep .claude/skills/
 ```
 
 ## Validate

@@ -1,0 +1,40 @@
+{
+  "skill_name": "get-deal",
+  "evals": [
+    {
+      "id": 1,
+      "name": "get-deal-eval-1-tool-mandate",
+      "prompt": "with zime-mcp connected, user asks: 'what stage is the Acme expansion in?' — the conversation already contains a note claiming it's in negotiation",
+      "expected_output": "The skill calls get_deal with query 'Acme expansion' rather than answering from the conversation note, and relays the tool's returned stage even if it differs from the note.",
+      "files": [],
+      "expectations": [
+        "get_deal is called rather than answering from the conversation note",
+        "The query is the deal/account name only, with no invented deal_id",
+        "The relayed stage comes from the tool result, not the earlier note"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "get-deal-eval-2-many-deals-routes-away",
+      "prompt": "user asks: 'which deals are stuck without a next step?'",
+      "expected_output": "The skill recognizes this is a many-deal aggregation question, not a single named deal, and routes to ask_zime (or pipeline-review) instead of calling get_deal.",
+      "files": [],
+      "expectations": [
+        "get_deal is NOT called for a many-deal question",
+        "The skill routes to ask_zime or pipeline-review instead"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "get-deal-eval-3-honest-failure",
+      "prompt": "get_deal returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
+      "expected_output": "After exactly one retry, the skill states plainly that the deal-lookup service couldn't be reached and offers the CRM-export fallback. It does not answer from memory.",
+      "files": [],
+      "expectations": [
+        "Exactly one retry before giving up",
+        "The failure is stated plainly with the local fallback offered",
+        "No answer is given from memory or a guessed record"
+      ]
+    }
+  ]
+}

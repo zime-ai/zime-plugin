@@ -88,8 +88,8 @@ Coupling to Zime products is allowed here. These still are not:
    emails, or transcript excerpts — sample assets are always synthetic.
 3. **No internal endpoints.** No `internal-*` hostnames, admin API paths,
    or raw HTTP calls in skill content. A skill addresses Zime through a
-   named MCP tool (e.g. the zime-mcp `prep-note` tool, which some clients
-   expose as `prep_note`); the tool owns the transport.
+   named MCP tool (e.g. the zime-mcp `prep_note` tool, wrapped here by the
+   `call-prep` skill); the tool owns the transport.
 4. **Every factual claim a skill outputs traces to a source** — tool
    output, a provided transcript, a CRM field. Gaps are stated, never
    filled with plausible guesses. Same trust bar as the open repo.

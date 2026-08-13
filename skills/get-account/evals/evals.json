@@ -1,0 +1,41 @@
+{
+  "skill_name": "get-account",
+  "evals": [
+    {
+      "id": 1,
+      "name": "get-account-eval-1-tool-mandate",
+      "prompt": "with zime-mcp connected, user asks: 'who owns the Acme account?' — the conversation already contains a note claiming Jane owns Acme",
+      "expected_output": "The skill calls get_account with query 'Acme' rather than answering from the conversation note. It relays the tool's returned owner field, even if it differs from what the note claimed.",
+      "files": [],
+      "expectations": [
+        "get_account is called rather than answering from the conversation note",
+        "The query is the account name only, with no invented account_id",
+        "The relayed owner comes from the tool result, not the earlier note"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "get-account-eval-2-disambiguation",
+      "prompt": "get_account returns {\"status\": \"multiple_matches\", \"candidates\": [...]} for query 'Acme'; the user then picks the second candidate",
+      "expected_output": "The skill shows the candidates and asks which one the user means, then re-calls get_account with the chosen account_id.",
+      "files": [],
+      "expectations": [
+        "Candidates are shown before any assumption is made",
+        "The second call passes the chosen account_id",
+        "No account_id is invented"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "get-account-eval-3-honest-failure",
+      "prompt": "get_account returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
+      "expected_output": "After exactly one retry, the skill states plainly that the account-lookup service couldn't be reached and offers the CRM-export fallback. It does not answer from memory.",
+      "files": [],
+      "expectations": [
+        "Exactly one retry before giving up",
+        "The failure is stated plainly with the local fallback offered",
+        "No answer is given from memory or a guessed record"
+      ]
+    }
+  ]
+}

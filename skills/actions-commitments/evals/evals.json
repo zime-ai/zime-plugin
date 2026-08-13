@@ -1,0 +1,39 @@
+{
+  "skill_name": "actions-commitments",
+  "evals": [
+    {
+      "id": 1,
+      "name": "actions-commitments-eval-1-single-deal-routes-to-get-deal-next-steps",
+      "prompt": "with zime-mcp connected, user asks: 'what's next on the Acme expansion?'",
+      "expected_output": "The skill calls get_deal_next_steps rather than ask_zime, since the request names one specific deal.",
+      "files": [],
+      "expectations": [
+        "get_deal_next_steps is called, not ask_zime, for a single named deal",
+        "The committed/scheduled/recommended groupings are kept separate in the answer"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "actions-commitments-eval-2-cross-deal-routes-to-ask-zime",
+      "prompt": "user asks: 'what are my action items from this week across all my deals?'",
+      "expected_output": "The skill calls ask_zime rather than get_deal_next_steps, since no single deal is named.",
+      "files": [],
+      "expectations": [
+        "ask_zime is called for the cross-deal/personal question",
+        "get_deal_next_steps is not called when no single deal is named"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "actions-commitments-eval-3-honest-failure",
+      "prompt": "get_deal_next_steps returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
+      "expected_output": "After exactly one retry, the skill states plainly the deal-analysis service couldn't be reached and offers the transcript/CRM-export fallback. It does not substitute a from-memory next-step list.",
+      "files": [],
+      "expectations": [
+        "Exactly one retry before giving up",
+        "The failure is stated plainly with the local fallback offered",
+        "No next-step list is fabricated from memory"
+      ]
+    }
+  ]
+}

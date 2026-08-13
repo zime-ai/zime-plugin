@@ -1,0 +1,40 @@
+{
+  "skill_name": "daily-briefing",
+  "evals": [
+    {
+      "id": 1,
+      "name": "daily-briefing-eval-1-tool-mandate-per-facet",
+      "prompt": "with zime-mcp connected, user asks: 'what's on my plate today?'",
+      "expected_output": "The skill calls ask_zime for meetings today, open action items, and deals needing attention (as separate focused calls or one combined question spanning all three), and does not invent a calendar-listing tool. It presents the results grouped by section.",
+      "files": [],
+      "expectations": [
+        "ask_zime is called for each facet requested, not a fabricated calendar/list tool",
+        "The briefing is presented grouped by section (meetings, deals, action items)",
+        "No section is answered from memory"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "daily-briefing-eval-2-empty-section-is-a-finding",
+      "prompt": "the action-items ask_zime call returns 'no open action items'",
+      "expected_output": "The skill states plainly that there are no open action items as a real finding, rather than omitting the section or padding it with a plausible-sounding item.",
+      "files": [],
+      "expectations": [
+        "The empty result is stated as a finding, not omitted",
+        "No invented action item fills the gap"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "daily-briefing-eval-3-partial-failure-still-delivers",
+      "prompt": "the meetings-today ask_zime call errors on both the first attempt and the retry, while the action-items and deals calls succeed",
+      "expected_output": "The skill states that the meetings section couldn't be reached, and still delivers the action-items and deals sections rather than withholding the whole briefing.",
+      "files": [],
+      "expectations": [
+        "Exactly one retry on the failing call",
+        "The failed section is marked as unreachable, not silently dropped",
+        "The successful sections are still delivered"
+      ]
+    }
+  ]
+}

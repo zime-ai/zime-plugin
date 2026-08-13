@@ -7,14 +7,14 @@ format hunts for. Give a brief to whoever authors the fixture; they write
 the meeting context and past-call transcript, and separately hand-label
 what a great prep note for that meeting must contain.
 
-## Brief 1: prep-note — the messy mid-deal handoff
+## Brief 1: call-prep (formerly prep-note) — the messy mid-deal handoff
 
 Situation: a third call on a mid-market deal where the AE who ran the
 first two calls just left the company, and a new AE plus an SE are walking
 in. Author, as separate files:
 
 - A meeting-context block for the upcoming call (use the field list in
-  `skills/prep-note/SKILL.md`, synthetic names only).
+  `skills/call-prep/SKILL.md`, synthetic names only).
 - Transcripts of the two prior calls. By construction they must contain:
   - one commitment the vendor side made and has NOT delivered (the gold
     label: a great prep note surfaces this first);

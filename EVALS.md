@@ -37,7 +37,8 @@ include:
   says plainly the live service was unreachable and offers the fallback.
   It never presents a hand-written result as tool-backed.
 
-`prep-note` evals 3 and 4 are the reference implementations of both.
+`call-prep` evals 3 and 4 (formerly `prep-note`) are the reference
+implementations of both.
 
 ## Private data
 

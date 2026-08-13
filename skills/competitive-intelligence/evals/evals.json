@@ -1,0 +1,38 @@
+{
+  "skill_name": "competitive-intelligence",
+  "evals": [
+    {
+      "id": 1,
+      "name": "competitive-intelligence-eval-1-tool-mandate-not-deal-objections",
+      "prompt": "with zime-mcp connected, user asks: 'why do we keep losing to Borealis Systems?'",
+      "expected_output": "The skill calls ask_zime with the competitor named explicitly, rather than routing to get_deal_objections (which is deal-scoped and would decline a cross-deal competitive question).",
+      "files": [],
+      "expectations": [
+        "ask_zime is called, not get_deal_objections, for a cross-deal competitor question",
+        "The competitor name is stated explicitly in the question, not as a pronoun"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "competitive-intelligence-eval-2-quote-requires-transcript",
+      "prompt": "user asks: 'what exactly did the Acme prospect say about Borealis Systems on that call?'",
+      "expected_output": "The skill resolves the call and calls get_transcript for the exact wording, rather than presenting ask_zime's synthesized summary in quotation marks as a verbatim quote.",
+      "files": [],
+      "expectations": [
+        "get_transcript is called for a request wanting exact wording",
+        "No ask_zime paraphrase is presented as a direct quote"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "competitive-intelligence-eval-3-honest-failure",
+      "prompt": "ask_zime declines the competitor question (no data for the requested window)",
+      "expected_output": "The skill states the decline plainly and does not substitute a guessed mention count or win/loss impression.",
+      "files": [],
+      "expectations": [
+        "The decline is relayed plainly",
+        "No mention count or win/loss claim is fabricated in its place"
+      ]
+    }
+  ]
+}
