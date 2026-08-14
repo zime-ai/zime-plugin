@@ -10,7 +10,7 @@
       "expectations": [
         "The skill states email lookup is not currently available, regardless of connection state",
         "No email content is fabricated from the call recap or memory",
-        "ask_zime or follow-up is offered as the closest available alternative"
+        "ask_zime_brain or follow-up is offered as the closest available alternative"
       ]
     },
     {
