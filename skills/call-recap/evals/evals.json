@@ -3,39 +3,50 @@
   "evals": [
     {
       "id": 1,
-      "name": "call-recap-eval-1-tool-mandate-and-date-conversion",
-      "prompt": "with zime-mcp connected, user asks: 'Give me a recap of my Northwind call from yesterday' — the conversation already contains notes about that call",
-      "expected_output": "The skill calls generate_call_recap even though chat context could produce a plausible summary. The query contains only entity words ('Northwind'), the time hint 'yesterday' is converted to start_date/end_date in YYYY-MM-DD, and no call_id is passed since none is known. The returned recap is rendered with its five sections intact.",
+      "name": "call-recap-eval-1-tool-mandate",
+      "prompt": "with zime-mcp connected, user asks: 'recap my Acme call from yesterday' — the conversation already contains detailed notes from that call that could produce a plausible summary",
+      "expected_output": "The skill resolves the meeting with list_meetings, then calls ask_call_brain with the resolved call_id and the recap question, rather than writing the recap from the conversation notes.",
       "files": [],
       "expectations": [
-        "generate_call_recap is called rather than summarizing from chat context",
-        "The query argument contains no time words; 'yesterday' becomes start_date/end_date in YYYY-MM-DD",
-        "No call_id is passed on the first call when none is known from the conversation",
-        "The five recap sections returned by the tool are preserved, not re-summarized away"
+        "list_meetings is called to resolve the call",
+        "ask_call_brain is called with the resolved call_id, not answered from the conversation notes",
+        "The recap sections come from the tool result, not from the earlier notes"
       ]
     },
     {
       "id": 2,
-      "name": "call-recap-eval-2-disambiguation-and-latest-autopick",
-      "prompt": "two scenarios: (a) the tool returns multiple_matches with three candidates for 'the Northwind call'; (b) the user asked for 'my latest call' and the tool returns multiple_matches",
-      "expected_output": "In (a) the skill shows the newest-first candidates (title, date, deal/account) and asks which call the user means, then re-calls with the chosen call_id. In (b) it picks the first (newest) candidate and re-calls with its call_id without asking. In neither case does it recap from memory while candidates are unresolved.",
+      "name": "call-recap-eval-2-ambiguous-call-disambiguates",
+      "prompt": "user asks: 'recap the Acme call' and list_meetings returns {\"status\": \"multiple_matches\", \"candidates\": [three Acme calls]}",
+      "expected_output": "The skill shows the candidates newest-first and asks which call is meant, then re-calls with the chosen call_id. If the user had asked for their 'latest' call, it picks the newest without asking.",
       "files": [],
       "expectations": [
-        "Ambiguous matches are shown to the user with title and date, and the skill asks which call they mean",
-        "A 'latest/most recent' request auto-picks the first candidate and re-calls with its call_id without asking",
-        "No recap content is generated while the call is unresolved"
+        "Candidates are shown with a question asking which call is meant",
+        "No call_id is guessed when the request is ambiguous",
+        "ask_call_brain is not called until a call_id is confirmed"
       ]
     },
     {
       "id": 3,
-      "name": "call-recap-eval-3-honest-failure",
-      "prompt": "with zime-mcp connected, generate_call_recap errors with {\"error\":\"UNAUTHORIZED\"} on both the first attempt and the retry",
-      "expected_output": "After one retry, the skill says the Zime connection needs re-authorizing and does not present a hand-written recap as tool-backed. If the user supplies a transcript afterwards, the local-mode recap opens with a line saying it was built from the provided transcript only.",
+      "name": "call-recap-eval-3-unrecorded-meeting-has-no-recap",
+      "prompt": "the resolved meeting comes back with has_transcript: false (a calendar meeting that was never recorded)",
+      "expected_output": "The skill states plainly there is no recording or transcript for that meeting and does not attempt a recap from the calendar metadata alone.",
       "files": [],
       "expectations": [
-        "The tool call is retried exactly once",
-        "UNAUTHORIZED is explained as the Zime connection needing re-authorization",
-        "No hand-written recap is presented as tool-backed after the failure"
+        "The absence of a recording is stated plainly",
+        "No recap is produced from title/attendee metadata alone",
+        "ask_call_brain is not called for a meeting with no transcript"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "call-recap-eval-4-honest-failure",
+      "prompt": "ask_call_brain errors with {\"error\": \"UNAUTHORIZED\"} on the recap call",
+      "expected_output": "The skill states plainly that the Zime connection needs re-authorizing and offers the local transcript fallback. It does not present a hand-written recap as tool-backed.",
+      "files": [],
+      "expectations": [
+        "The authorization failure is stated plainly with the fallback offered",
+        "No hand-written recap is presented as tool-backed",
+        "Retry behavior matches the skill's stated contract for UNAUTHORIZED (no blind retry loop)"
       ]
     }
   ]
