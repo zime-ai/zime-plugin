@@ -3,36 +3,61 @@
   "evals": [
     {
       "id": 1,
-      "name": "deal-strategy-eval-1-objections-routes-to-get-deal-objections",
-      "prompt": "with zime-mcp connected, user asks: 'what pushback have we gotten on the Meridian deal?'",
-      "expected_output": "The skill calls get_deal_objections rather than ask_zime_brain, since the request is specifically and only about objections in one named deal.",
+      "name": "deal-strategy-eval-1-tool-mandate-resolve-then-delegate",
+      "prompt": "with zime-mcp connected, user asks: 'what's holding the Acme expansion back?' — the conversation already contains a note listing two plausible blockers",
+      "expected_output": "The skill resolves the deal with list_deals, then calls ask_deal_brain with the resolved deal_id and the question, rather than answering from the conversation note or offering generic sales advice.",
       "files": [],
       "expectations": [
-        "get_deal_objections is called, not ask_zime_brain, for a pure objections question",
-        "The query contains the deal/account name, not a full sentence"
+        "list_deals is called to resolve the named deal",
+        "ask_deal_brain is called with the resolved deal_id",
+        "The answer is not taken from the conversation note or generic playbook advice"
       ]
     },
     {
       "id": 2,
-      "name": "deal-strategy-eval-2-strategy-routes-to-ask-zime",
-      "prompt": "user asks: 'why are we losing to Concerto Robotics on the Acme deal, and what should the rep do?'",
-      "expected_output": "The skill calls ask_zime_brain rather than get_deal_objections, since the request is prescriptive/comparative, not a pure objections lookup.",
+      "name": "deal-strategy-eval-2-prescriptive-question-same-chain",
+      "prompt": "user asks: 'how do I win the Acme expansion against Borealis?'",
+      "expected_output": "The skill uses the same list_deals → ask_deal_brain chain for the prescriptive/comparative question, passing the competitor and the intent through in the question text rather than substituting its own competitive strategy.",
       "files": [],
       "expectations": [
-        "ask_zime_brain is called for the prescriptive strategy question",
-        "get_deal_objections is not called for a question broader than pure objections"
+        "The same list_deals → ask_deal_brain chain is used for prescriptive questions",
+        "The competitor is named explicitly in the question sent to ask_deal_brain",
+        "No generic competitive strategy is substituted for the agent's grounded read"
       ]
     },
     {
       "id": 3,
-      "name": "deal-strategy-eval-3-honest-failure",
-      "prompt": "get_deal_objections returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
-      "expected_output": "After exactly one retry, the skill states plainly the deal-analysis service couldn't be reached and offers the transcript/CRM-export fallback. It does not substitute a from-memory objection list.",
+      "name": "deal-strategy-eval-3-cross-deal-routes-away",
+      "prompt": "user asks: 'why are we losing to Borealis across the board?'",
+      "expected_output": "The skill recognizes this spans many deals rather than one, and routes to competitive-intelligence (or ask_zime_brain) instead of resolving a single deal with list_deals.",
+      "files": [],
+      "expectations": [
+        "list_deals is NOT called for a cross-deal question",
+        "The skill routes to competitive-intelligence or ask_zime_brain"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "deal-strategy-eval-4-ambiguous-deal-disambiguates",
+      "prompt": "with zime-mcp connected, user asks: 'how do I win Acme?' and list_deals returns {\"status\": \"multiple_matches\", \"candidates\": [two Acme deals]}",
+      "expected_output": "The skill shows both candidates and asks which deal the user means, then re-calls with the chosen deal_id. It does not pick one itself.",
+      "files": [],
+      "expectations": [
+        "Both candidates are shown with a question asking which one",
+        "No deal_id is guessed or auto-picked",
+        "ask_deal_brain is not called until a deal_id is confirmed"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "deal-strategy-eval-5-honest-failure",
+      "prompt": "ask_deal_brain returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
+      "expected_output": "After exactly one retry, the skill states plainly the deal-analysis service couldn't be reached and offers the transcript/CRM-export fallback. It does not substitute generic coaching for the agent's grounded read.",
       "files": [],
       "expectations": [
         "Exactly one retry before giving up",
         "The failure is stated plainly with the local fallback offered",
-        "No objection list is fabricated from memory"
+        "No generic sales coaching is presented as a tool-backed answer"
       ]
     }
   ]

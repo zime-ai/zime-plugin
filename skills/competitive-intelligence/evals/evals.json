@@ -3,29 +3,53 @@
   "evals": [
     {
       "id": 1,
-      "name": "competitive-intelligence-eval-1-tool-mandate-not-deal-objections",
-      "prompt": "with zime-mcp connected, user asks: 'why do we keep losing to Borealis Systems?'",
-      "expected_output": "The skill calls ask_zime_brain with the competitor named explicitly, rather than routing to get_deal_objections (which is deal-scoped and would decline a cross-deal competitive question).",
+      "name": "competitive-intelligence-eval-1-tool-mandate-cross-corpus",
+      "prompt": "with zime-mcp connected, user asks: 'why do we keep losing to Borealis Systems?' — the conversation already contains a note speculating on the reason",
+      "expected_output": "The skill calls ask_zime_brain directly with the competitor named explicitly and no resolve step, rather than answering from the conversation note or filling in general market knowledge about Borealis.",
       "files": [],
       "expectations": [
-        "ask_zime_brain is called, not get_deal_objections, for a cross-deal competitor question",
-        "The competitor name is stated explicitly in the question, not as a pronoun"
+        "ask_zime_brain is called directly, with no list_meetings resolve step for a cross-deal question",
+        "The competitor name is stated explicitly in the question, not as a pronoun",
+        "The answer is not taken from the earlier conversation note or general market knowledge"
       ]
     },
     {
       "id": 2,
-      "name": "competitive-intelligence-eval-2-quote-requires-transcript",
-      "prompt": "user asks: 'what exactly did the Acme prospect say about Borealis Systems on that call?'",
-      "expected_output": "The skill resolves the call and calls get_transcript for the exact wording, rather than presenting ask_zime_brain's synthesized summary in quotation marks as a verbatim quote.",
+      "name": "competitive-intelligence-eval-2-single-call-scope-resolves-first",
+      "prompt": "user asks: 'did Borealis Systems come up on the Acme call last week?'",
+      "expected_output": "The skill resolves the meeting with list_meetings, then calls ask_call_brain with the resolved call_id, rather than sending a cross-corpus question to ask_zime_brain.",
       "files": [],
       "expectations": [
-        "get_transcript is called for a request wanting exact wording",
-        "No ask_zime_brain paraphrase is presented as a direct quote"
+        "list_meetings is called to resolve the single call",
+        "ask_call_brain is called with the resolved call_id",
+        "ask_zime_brain is NOT used when the scope is one named call"
       ]
     },
     {
       "id": 3,
-      "name": "competitive-intelligence-eval-3-honest-failure",
+      "name": "competitive-intelligence-eval-3-quote-requires-transcript",
+      "prompt": "user asks: 'what exactly did the Acme prospect say about Borealis Systems on that call?'",
+      "expected_output": "The skill calls get_transcript for the exact wording, rather than presenting an ask_call_brain or ask_zime_brain synthesis in quotation marks as a verbatim quote.",
+      "files": [],
+      "expectations": [
+        "get_transcript is called for a request wanting exact wording",
+        "No agent paraphrase is presented as a direct quote"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "competitive-intelligence-eval-4-window-stated-in-question",
+      "prompt": "user asks: 'what did customers say about Borealis last quarter?'",
+      "expected_output": "The skill states the time window inside the ask_zime_brain question text, since the agent has no date parameters and no memory of the conversation.",
+      "files": [],
+      "expectations": [
+        "The time window appears explicitly in the question text sent to ask_zime_brain",
+        "The window is not assumed to carry over from conversation context"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "competitive-intelligence-eval-5-honest-failure",
       "prompt": "ask_zime_brain declines the competitor question (no data for the requested window)",
       "expected_output": "The skill states the decline plainly and does not substitute a guessed mention count or win/loss impression.",
       "files": [],

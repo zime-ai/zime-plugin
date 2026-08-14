@@ -3,36 +3,50 @@
   "evals": [
     {
       "id": 1,
-      "name": "actions-commitments-eval-1-single-deal-routes-to-get-deal-next-steps",
-      "prompt": "with zime-mcp connected, user asks: 'what's next on the Acme expansion?'",
-      "expected_output": "The skill calls get_deal_next_steps rather than ask_zime_brain, since the request names one specific deal.",
+      "name": "actions-commitments-eval-1-tool-mandate-single-deal",
+      "prompt": "with zime-mcp connected, user asks: 'what did we commit to on the Acme expansion?' — the conversation already contains a note listing two plausible commitments",
+      "expected_output": "The skill resolves the deal with list_deals, then calls ask_deal_brain with the resolved deal_id and the commitments question, rather than answering from the conversation note. Committed, scheduled, and recommended items are kept separate.",
       "files": [],
       "expectations": [
-        "get_deal_next_steps is called, not ask_zime_brain, for a single named deal",
+        "list_deals is called to resolve the named deal",
+        "ask_deal_brain is called with the resolved deal_id, not answered from the conversation note",
         "The committed/scheduled/recommended groupings are kept separate in the answer"
       ]
     },
     {
       "id": 2,
-      "name": "actions-commitments-eval-2-cross-deal-routes-to-ask-zime",
-      "prompt": "user asks: 'what are my action items from this week across all my deals?'",
-      "expected_output": "The skill calls ask_zime_brain rather than get_deal_next_steps, since no single deal is named.",
+      "name": "actions-commitments-eval-2-single-call-routes-to-call-brain",
+      "prompt": "user asks: 'what did we promise on the Acme call last Tuesday?'",
+      "expected_output": "The skill resolves the meeting with list_meetings (recorded: true) and calls ask_call_brain with the resolved call_id, not ask_deal_brain, since the scope is one call rather than the whole deal.",
       "files": [],
       "expectations": [
-        "ask_zime_brain is called for the cross-deal/personal question",
-        "get_deal_next_steps is not called when no single deal is named"
+        "list_meetings is called with recorded: true to resolve the call",
+        "ask_call_brain is called with the resolved call_id",
+        "ask_deal_brain is NOT called when the scope is a single call"
       ]
     },
     {
       "id": 3,
-      "name": "actions-commitments-eval-3-honest-failure",
-      "prompt": "get_deal_next_steps returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
-      "expected_output": "After exactly one retry, the skill states plainly the deal-analysis service couldn't be reached and offers the transcript/CRM-export fallback. It does not substitute a from-memory next-step list.",
+      "name": "actions-commitments-eval-3-ambiguous-scope-disambiguates",
+      "prompt": "with zime-mcp connected, user asks: 'what's still open on Acme?' and list_deals returns {\"status\": \"multiple_matches\", \"candidates\": [two Acme deals]}",
+      "expected_output": "The skill shows both candidates and asks which deal the user means, then re-calls with the chosen deal_id. It does not pick one itself and does not proceed to ask_deal_brain on a guess.",
+      "files": [],
+      "expectations": [
+        "Both candidates are shown to the user with a question asking which one",
+        "No deal_id is guessed or auto-picked",
+        "ask_deal_brain is not called until a deal_id is confirmed"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "actions-commitments-eval-4-honest-failure",
+      "prompt": "ask_deal_brain returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
+      "expected_output": "After exactly one retry, the skill states plainly the deal-analysis service couldn't be reached and offers the transcript/CRM-export fallback. It does not substitute a from-memory commitments list.",
       "files": [],
       "expectations": [
         "Exactly one retry before giving up",
         "The failure is stated plainly with the local fallback offered",
-        "No next-step list is fabricated from memory"
+        "No commitments list is fabricated from memory"
       ]
     }
   ]
