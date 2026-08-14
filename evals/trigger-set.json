@@ -79,11 +79,11 @@
     },
     {
       "prompt": "Build me a mini case study of how Northwind uses us for the deck.",
-      "should_trigger": "sales-asset-builder"
+      "should_trigger": "create-sales-asset"
     },
     {
       "prompt": "Put together a handover for the Acme deal before CS takes it over.",
-      "should_trigger": "sales-cs-handover"
+      "should_trigger": "create-sales-to-cs-handover"
     },
     {
       "prompt": "What's stuck in my pipeline this quarter?",

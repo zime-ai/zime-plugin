@@ -1,5 +1,5 @@
 ---
-name: sales-asset-builder
+name: create-sales-asset
 description: Builds a sales asset in the house format — an account review deck, a proof-point one-pager, a battlecard section, a case-study writeup, or objection talking points — assembled only from facts a tool returned this conversation. Use whenever someone wants collateral built from real customer evidence — "build me an account review for Acme", "make a proof point for the Northwind deal", "put together a battlecard against Concerto", "give me talking points for the security objection" — even if they never say "asset". Resolves the subject with list_accounts or list_deals, gathers dated evidence via ask_deal_brain / ask_account_brain / ask_zime_brain, and pulls exact quotes with get_transcript; never originates a metric, quote, or customer outcome. Always an internal draft, never customer-ready collateral. Falls back to a narrower asset from user-provided files only when no zime-mcp server is available.
 license: MIT
 metadata:
@@ -54,7 +54,7 @@ precisely why fabrication here is the most expensive.
 ## Usage
 
 ```
-/sales-asset-builder <asset type> for <account, deal, or competitor>
+/create-sales-asset <asset type> for <account, deal, or competitor>
 ```
 
 Build: $ARGUMENTS
@@ -212,5 +212,5 @@ reads only the provided files.
 
 - **competitive-intelligence** — gather competitor evidence first
 - **deal-strategy** — the analysis behind a deal-focused asset
-- **sales-cs-handover** — the handover doc, a different house format
+- **create-sales-to-cs-handover** — the handover doc, a different house format
 - **get-transcript** — the exact quotable line

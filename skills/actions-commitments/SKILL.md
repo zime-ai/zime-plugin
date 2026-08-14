@@ -166,4 +166,4 @@ only the provided file.
 
 - **follow-up** — the email that chases these
 - **call-recap** — the full picture of one call
-- **sales-cs-handover** — commitments carried into the handover doc
+- **create-sales-to-cs-handover** — commitments carried into the handover doc

@@ -137,4 +137,4 @@ MCP mode sends only the query words, domain, and (when pinning) an
 
 - **account-research** — a company not yet in CRM (web research + ICP fit)
 - **get-deal** — a specific deal on this account
-- **sales-cs-handover** — package this account for CS
+- **create-sales-to-cs-handover** — package this account for CS

@@ -66,7 +66,7 @@ Research the prospect: $ARGUMENTS
 - A deal already in flight → `deal-strategy`.
 - A competitor rather than a prospect → `competitive-intelligence` (which
   reads our calls, not the web).
-- Building the outreach asset after research → `sales-asset-builder`.
+- Building the outreach asset after research → `create-sales-asset`.
 
 ## What I Need From You
 
@@ -207,5 +207,5 @@ prospect's public name to the search tool.
 ## Related Skills
 
 - **get-account** — a company already in CRM
-- **sales-asset-builder** — build the outreach asset from this research
+- **create-sales-asset** — build the outreach asset from this research
 - **call-prep** — once the first meeting is booked

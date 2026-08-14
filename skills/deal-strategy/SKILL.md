@@ -159,5 +159,5 @@ analysis question (to `ask_deal_brain`). Local mode reads only the provided file
 
 - **get-deal** — the deal's raw fields
 - **actions-commitments** — what's still open on it
-- **sales-asset-builder** — build collateral from this deal's evidence
+- **create-sales-asset** — build collateral from this deal's evidence
 - **pipeline-review** — the same lens across many deals

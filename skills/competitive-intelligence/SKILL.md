@@ -61,7 +61,7 @@ Competitive intel on: $ARGUMENTS
 - Objections on ONE deal, competitor or not → `deal-strategy`.
 - A recap of one call that happened to mention a competitor → `call-recap`.
 - Turning competitive evidence into a battlecard or talking points →
-  `sales-asset-builder`.
+  `create-sales-asset`.
 - Win/loss rates and pipeline totals → `pipeline-review`.
 
 ## What I Need From You
@@ -173,7 +173,7 @@ Rules:
    parameters.
 3. **"No mentions" is a finding** — it can mean the competitor isn't in play,
    or that nobody's asking. Both are actionable.
-4. **Need a battlecard?** Pass this evidence to `sales-asset-builder`.
+4. **Need a battlecard?** Pass this evidence to `create-sales-asset`.
 
 ## Local mode (only when no zime-mcp server is connected)
 
@@ -190,6 +190,6 @@ reads only the provided files.
 
 ## Related Skills
 
-- **sales-asset-builder** — turn this evidence into a battlecard
+- **create-sales-asset** — turn this evidence into a battlecard
 - **deal-strategy** — competitor dynamics on one specific deal
 - **get-transcript** — the exact quotable line
