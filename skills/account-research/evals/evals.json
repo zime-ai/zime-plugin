@@ -3,37 +3,49 @@
   "evals": [
     {
       "id": 1,
-      "name": "account-research-eval-1-tool-mandate-both-calls",
-      "prompt": "with zime-mcp connected, user asks: 'get me up to speed on Acme before the QBR' — the conversation already contains a note describing Acme as a happy customer",
-      "expected_output": "The skill calls get_account for the CRM facts, then calls ask_zime_brain for the narrative (deal history, sentiment, risk, stakeholders), passing the resolved account name rather than a pronoun. It does not answer from the earlier note.",
+      "name": "account-research-eval-1-tool-mandate-icp-baseline-first",
+      "prompt": "with zime-mcp connected, user asks: 'research Northwind Logistics for me — are they a fit?' — the conversation already contains a note describing what a good customer looks like",
+      "expected_output": "The skill calls ask_zime_brain FIRST for our own ICP baseline, then runs web research on Northwind. The fit assessment is anchored to the returned ICP, not to the conversation note or a generic B2B SaaS prior.",
       "files": [],
       "expectations": [
-        "get_account is called before ask_zime_brain",
-        "ask_zime_brain's question names 'Acme' explicitly, not a pronoun",
-        "The brief is not answered from the earlier conversation note"
+        "ask_zime_brain is called before any web search, asking about OUR ICP and won-customer patterns",
+        "The ask_zime_brain question does NOT contain the prospect's name (Zime has no data on them)",
+        "The fit assessment cites the returned ICP rather than the earlier conversation note"
       ]
     },
     {
       "id": 2,
-      "name": "account-research-eval-2-routes-single-deal-away",
-      "prompt": "user asks: 'what stage is the Acme renewal in?'",
-      "expected_output": "The skill recognizes this names one specific deal, not an account-wide brief, and routes to get-deal instead of running the full two-call research flow.",
+      "name": "account-research-eval-2-existing-customer-routes-away",
+      "prompt": "user asks: 'get me up to speed on Acme before the QBR' — Acme is already a customer in CRM",
+      "expected_output": "The skill recognizes Acme is an existing account, not a prospect, and routes to get-account (for the CRM record) rather than running the prospect-research web flow.",
       "files": [],
       "expectations": [
-        "The skill does not run the full account-research flow for a single-deal question",
-        "It routes to get-deal"
+        "The skill does not run the prospect web-research flow for an existing customer",
+        "It routes to get-account"
       ]
     },
     {
       "id": 3,
-      "name": "account-research-eval-3-honest-failure",
-      "prompt": "get_account resolves successfully, but ask_zime_brain returns an access-control decline for the narrative half",
-      "expected_output": "The skill delivers the CRM facts from get_account, states plainly that the narrative half was declined, and does not fill that half in from memory or general knowledge.",
+      "name": "account-research-eval-3-unanchored-icp-labels-provisional",
+      "prompt": "with zime-mcp connected, ask_zime_brain returns nothing useful about our ICP; the user asked to research Northwind Logistics",
+      "expected_output": "The skill still delivers the web-research brief, but states plainly the fit assessment is unanchored and labels the ICP scorecard provisional. It does not quietly substitute a generic B2B SaaS ICP.",
       "files": [],
       "expectations": [
-        "The CRM-facts half is still delivered",
-        "The narrative half's decline is stated plainly, not silently dropped",
-        "No narrative content is fabricated in place of the decline"
+        "The web-research brief is still delivered",
+        "The scorecard is explicitly labeled provisional with the reason stated",
+        "No generic ICP is silently substituted for ours"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "account-research-eval-4-no-source-means-unknown",
+      "prompt": "user asks to research a small private company whose headcount and funding are not stated on any public source found",
+      "expected_output": "The scorecard records headcount and funding as unknown, with no invented figures, and every stated fact carries a source link.",
+      "files": [],
+      "expectations": [
+        "Headcount and funding are reported as unknown rather than estimated",
+        "No named champion, headcount, or funding figure appears without a cited source",
+        "Cited links accompany the facts that are stated"
       ]
     }
   ]
