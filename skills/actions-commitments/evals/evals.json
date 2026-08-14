@@ -5,10 +5,10 @@
       "id": 1,
       "name": "actions-commitments-eval-1-single-deal-routes-to-get-deal-next-steps",
       "prompt": "with zime-mcp connected, user asks: 'what's next on the Acme expansion?'",
-      "expected_output": "The skill calls get_deal_next_steps rather than ask_zime, since the request names one specific deal.",
+      "expected_output": "The skill calls get_deal_next_steps rather than ask_zime_brain, since the request names one specific deal.",
       "files": [],
       "expectations": [
-        "get_deal_next_steps is called, not ask_zime, for a single named deal",
+        "get_deal_next_steps is called, not ask_zime_brain, for a single named deal",
         "The committed/scheduled/recommended groupings are kept separate in the answer"
       ]
     },
@@ -16,10 +16,10 @@
       "id": 2,
       "name": "actions-commitments-eval-2-cross-deal-routes-to-ask-zime",
       "prompt": "user asks: 'what are my action items from this week across all my deals?'",
-      "expected_output": "The skill calls ask_zime rather than get_deal_next_steps, since no single deal is named.",
+      "expected_output": "The skill calls ask_zime_brain rather than get_deal_next_steps, since no single deal is named.",
       "files": [],
       "expectations": [
-        "ask_zime is called for the cross-deal/personal question",
+        "ask_zime_brain is called for the cross-deal/personal question",
         "get_deal_next_steps is not called when no single deal is named"
       ]
     },
