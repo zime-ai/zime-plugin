@@ -5,11 +5,11 @@
       "id": 1,
       "name": "pipeline-review-eval-1-tool-mandate-no-loop",
       "prompt": "with zime-mcp connected, user asks: 'what's stuck in my pipeline this quarter?' — the conversation already contains a note naming three deals the user mentioned recently",
-      "expected_output": "The skill calls ask_zime_brain once with the aggregate question. It does not call get_deal in a loop over the three previously-mentioned deal names to assemble a pipeline view itself.",
+      "expected_output": "The skill calls ask_zime_brain once with the aggregate question. It does not call list_deals in a loop over the three previously-mentioned deal names to assemble a pipeline view itself.",
       "files": [],
       "expectations": [
         "ask_zime_brain is called for the aggregate question",
-        "get_deal is not called in a loop to stitch together a pipeline view",
+        "list_deals is not called in a loop to stitch together a pipeline view",
         "The question preserves the user's stated scope ('my pipeline', 'this quarter')"
       ]
     },
@@ -17,12 +17,12 @@
       "id": 2,
       "name": "pipeline-review-eval-2-drilldown-uses-get-deal",
       "prompt": "ask_zime_brain's pipeline answer flags 'Acme expansion' as stalled; the user then asks 'what stage is that in?'",
-      "expected_output": "The skill calls get_deal for the single named deal rather than re-running the pipeline-wide ask_zime_brain call or answering from the pipeline summary's own wording.",
+      "expected_output": "The skill calls list_deals for the single named deal rather than re-running the pipeline-wide ask_zime_brain call or answering from the pipeline summary's own wording.",
       "files": [],
       "expectations": [
-        "get_deal is called for the single-deal follow-up",
+        "list_deals is called for the single-deal follow-up",
         "ask_zime_brain is not re-called for a single-deal drill-down",
-        "The stage is taken from get_deal's result, not re-derived from the earlier pipeline answer"
+        "The stage is taken from list_deals's result, not re-derived from the earlier pipeline answer"
       ]
     },
     {

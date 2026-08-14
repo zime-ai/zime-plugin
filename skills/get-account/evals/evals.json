@@ -5,10 +5,10 @@
       "id": 1,
       "name": "get-account-eval-1-tool-mandate",
       "prompt": "with zime-mcp connected, user asks: 'who owns the Acme account?' — the conversation already contains a note claiming Jane owns Acme",
-      "expected_output": "The skill calls get_account with query 'Acme' rather than answering from the conversation note. It relays the tool's returned owner field, even if it differs from what the note claimed.",
+      "expected_output": "The skill calls list_accounts with query 'Acme' rather than answering from the conversation note. It relays the tool's returned owner field, even if it differs from what the note claimed.",
       "files": [],
       "expectations": [
-        "get_account is called rather than answering from the conversation note",
+        "list_accounts is called rather than answering from the conversation note",
         "The query is the account name only, with no invented account_id",
         "The relayed owner comes from the tool result, not the earlier note"
       ]
@@ -16,8 +16,8 @@
     {
       "id": 2,
       "name": "get-account-eval-2-disambiguation",
-      "prompt": "get_account returns {\"status\": \"multiple_matches\", \"candidates\": [...]} for query 'Acme'; the user then picks the second candidate",
-      "expected_output": "The skill shows the candidates and asks which one the user means, then re-calls get_account with the chosen account_id.",
+      "prompt": "list_accounts returns {\"status\": \"multiple_matches\", \"candidates\": [...]} for query 'Acme'; the user then picks the second candidate",
+      "expected_output": "The skill shows the candidates and asks which one the user means, then re-calls list_accounts with the chosen account_id.",
       "files": [],
       "expectations": [
         "Candidates are shown before any assumption is made",
@@ -28,7 +28,7 @@
     {
       "id": 3,
       "name": "get-account-eval-3-honest-failure",
-      "prompt": "get_account returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
+      "prompt": "list_accounts returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
       "expected_output": "After exactly one retry, the skill states plainly that the account-lookup service couldn't be reached and offers the CRM-export fallback. It does not answer from memory.",
       "files": [],
       "expectations": [

@@ -5,10 +5,10 @@
       "id": 1,
       "name": "get-meeting-eval-1-tool-mandate",
       "prompt": "with zime-mcp connected, user asks: 'when was my last call with Acme, and who was on it?'",
-      "expected_output": "The skill calls get_call with query 'Acme' (no time words in the query) rather than guessing from memory, and relays the returned title/date/attendees.",
+      "expected_output": "The skill calls list_meetings with query 'Acme' (no time words in the query) rather than guessing from memory, and relays the returned title/date/attendees.",
       "files": [],
       "expectations": [
-        "get_call is called rather than answering from memory",
+        "list_meetings is called rather than answering from memory",
         "The query contains no time words",
         "The relayed date and attendees come from the tool result"
       ]
@@ -17,17 +17,17 @@
       "id": 2,
       "name": "get-meeting-eval-2-routes-transcript-request-away",
       "prompt": "user asks: 'what exactly did they say about pricing on that call?'",
-      "expected_output": "The skill recognizes this wants the verbatim words, not metadata, and routes to get-transcript instead of calling get_call.",
+      "expected_output": "The skill recognizes this wants the verbatim words, not metadata, and routes to get-transcript instead of calling list_meetings.",
       "files": [],
       "expectations": [
-        "The skill does not attempt to answer a content question with get_call metadata",
+        "The skill does not attempt to answer a content question with list_meetings metadata",
         "The skill routes to get-transcript"
       ]
     },
     {
       "id": 3,
       "name": "get-meeting-eval-3-honest-failure",
-      "prompt": "get_call returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
+      "prompt": "list_meetings returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
       "expected_output": "After exactly one retry, the skill states plainly that the meeting-lookup service couldn't be reached and offers the local fallback (a provided transcript or invite). It does not answer from memory.",
       "files": [],
       "expectations": [
