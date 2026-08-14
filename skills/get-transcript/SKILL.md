@@ -1,92 +1,145 @@
 ---
 name: get-transcript
-description: Gets the FULL verbatim transcript for ONE call/meeting. Use whenever someone wants the actual words said on a specific call — "what exactly did they say about pricing on the Acme call", "pull the transcript from my Northwind demo", "did they use the word 'competitor' on that call" — even if they never say "transcript". Always calls the get_transcript tool on the zime-mcp server when connected — never hand-answers from memory or chat context in its place — and handles the tool's disambiguation flow (multiple_matches candidates, pinning a call_id). Has no local fallback of its own: the transcript only exists inside Zime, so without a connection the skill says so rather than inventing one.
+description: Returns the FULL verbatim transcript of ONE recorded call. Use whenever someone wants the actual words said — "get me the transcript of the Acme call", "what exactly did they say on the Northwind demo", "pull the recording text for the Concerto QBR" — or when another task needs an exact quotable line. Always calls the get_transcript tool on the zime-mcp server when connected, never reconstructs or paraphrases a transcript from memory or chat context, and handles the disambiguation flow (multiple_matches candidates, pinning a call_id). A transcript exists only for recorded past calls, never for upcoming or unrecorded meetings. Falls back to a user-provided transcript file only when no zime-mcp server is available.
 license: MIT
 metadata:
   zime:category: cross-stage
   zime:dimension: initiative
-  zime:input-modes: mcp
+  zime:input-modes: mcp,transcript
 ---
 
 # Get Transcript
 
-Answers "what exactly did they say about pricing on the Acme call?" with
-the actual verbatim transcript — not a summary, not a recap, the raw
-speaker-by-speaker record. Use this only when the user needs the words
-themselves; anything that wants synthesis or structure belongs to a
-sibling skill.
+Returns the actual words from one recorded call. This is the only skill that
+produces literally quotable text — everything else works from synthesis.
+
+## How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                       GET TRANSCRIPT                             │
+├─────────────────────────────────────────────────────────────────┤
+│  RESOLVE + FETCH                                                 │
+│  ✓ Call name/topic + date → one call_id                          │
+│  ✓ Fetch full verbatim transcript                                │
+│  ✓ Ambiguous → show candidates, ask, re-call pinned              │
+├─────────────────────────────────────────────────────────────────┤
+│  NOT THIS SKILL (route away)                                     │
+│  ✗ Summary instead of raw text  → call-recap                     │
+│  ✗ Action items from the call   → actions-commitments            │
+│  ✗ Follow-up email              → follow-up                      │
+│  ✗ Upcoming meeting             → no transcript exists yet       │
+├─────────────────────────────────────────────────────────────────┤
+│  LOCAL FALLBACK (no zime-mcp)                                    │
+│  ~ Read a transcript file the user provides                      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Usage
+
+```
+/get-transcript <call topic or company> [+ when]
+```
+
+Get the transcript for: $ARGUMENTS
 
 ## Routing
 
-- A structured recap (decisions, action items, risks), not the raw text →
-  `call-recap`.
-- Just the call's metadata (title, date, attendees) → `get-meeting`.
-- A specific question answerable from the call's extracted signals
-  (objections, competitor mentions) rather than the raw text → `ask_zime`.
-- Cross-call search ("find calls where pricing came up") → `ask_zime`;
-  this tool returns one call's transcript, not a search across many.
+- A summary rather than raw text → `call-recap`.
+- Extracted commitments and owners → `actions-commitments`.
+- A drafted follow-up → `follow-up`.
+- Which call, when, who attended → `get-meeting`.
+- **Nothing to return** for an upcoming meeting or an unrecorded past one.
+  Say that plainly instead of substituting a different call.
+
+## What I Need From You
+
+The company or topic, plus a date hint if you have one. If several calls
+match, I'll show candidates and ask — a transcript is long, so returning the
+wrong one wastes a lot of context.
 
 ## MCP mode (required when zime-mcp is connected)
 
-When a zime-mcp server exposes `get_transcript` (fully qualified:
-`Zime:get_transcript`; some clients surface it as
-`mcp__claude_ai_Zime__get_transcript`), route the request through it.
-Answering from memory or chat context while the tool is available is a
-failure of this skill — only the tool has the verbatim record, and a
-remembered paraphrase is not a transcript.
+**Required tool:** `get_transcript` (fully qualified `Zime:get_transcript`).
+
+Reconstructing or paraphrasing a transcript while the tool is available is a
+failure of this skill. A remembered "quote" is not a quote.
 
 ### Arguments
 
-- `query` — words identifying the call: company, attendee, or topic. Put
-  time hints in `start_date`/`end_date`, not in the query. Omit `query` if
-  you already have `call_id` (e.g. from a prior `get-meeting` result).
-- `call_id` — pin an exact call (from a prior `multiple_matches` response,
-  or already known from this conversation). Never invent one.
-- `start_date` / `end_date` — YYYY-MM-DD, inclusive. Defaults to the last
-  90 days.
+- `query` — words identifying the call: company, attendee, or topic. Keep
+  time words OUT.
+- `call_id` — pin an exact call from a prior `multiple_matches` response or
+  a `get-meeting` result. Never invent one.
+- `start_date` / `end_date` — YYYY-MM-DD, inclusive. All time hints go here.
 
-**Example** — "pull the transcript from my Acme call":
+**Example** — "get me the transcript of the Acme renewal call in May":
 
 ```json
-{ "query": "Acme" }
+{ "query": "Acme renewal", "start_date": "2026-05-01", "end_date": "2026-05-31" }
 ```
 
 ### Outcomes
 
-The tool returns one of three shapes:
-
-- `{"status": "resolved", "data": {...}}` — the full transcript. Deliver
-  per Output below.
-- `{"status": "multiple_matches", "candidates": [...]}` — more than one
-  call matched. Show the candidates, ask the user which one they mean, then
-  re-call with the chosen `call_id`. Never guess among them.
-- `{"status": "no_match"}` — no call matched; say so plainly rather than
-  substituting a similarly-named call.
-- An error — `isError: true` with `{"error": "<CODE>"}`. `INTERNAL_ERROR`
-  is usually transient: retry once. `UNAUTHORIZED` or `FORBIDDEN` means the
-  Zime connection needs re-authorizing or lacks access — say so.
-  `INVALID_ARGUMENT` means the arguments were malformed — fix and re-call.
-  If it still fails, say plainly the transcript service couldn't be
-  reached. Never substitute a remembered or invented quote for a real one.
+- `{"status": "resolved", "data": {...}}` — the transcript plus call
+  metadata. Deliver per Output below.
+- `{"status": "multiple_matches", "candidates": [...]}` — show candidates
+  with dates, ask which one, re-call with the chosen `call_id`. Never guess:
+  the cost of the wrong transcript is high.
+- `{"status": "no_match", "candidates": [...]}` — nothing matched. Most
+  often the date window excludes it, or the call was never recorded. Say
+  which is likely, show near-misses, offer to widen the window. Never
+  substitute a different call's transcript.
+- An error — `{"error": "<CODE>"}`. `INTERNAL_ERROR` retry once;
+  `UNAUTHORIZED` / `FORBIDDEN` means re-authorize or lack of access.
+  This call fetches a large payload, so a timeout is a real possibility — if
+  it fails twice, say so plainly rather than filling in from memory.
 
 ## Output
 
-Relay the transcript content as returned — every quote attributed to the
-speaker and timestamp the tool gives it. If the user asked a narrower
-question ("what did they say about pricing"), answer from the returned
-transcript only, quoting directly rather than paraphrasing from memory;
-don't drop the rest of the transcript from context if a follow-up needs it.
+Lead with what call this is, then the transcript itself.
 
-## Local mode
+```markdown
+**Transcript — [call title]** · [date] · [duration if returned]
+**Attendees:** [names]
+**Linked deal:** [deal name, or none]
 
-There is no local fallback: the transcript lives only inside Zime, and
-this skill will not fabricate one from a title or a remembered
-conversation. Without a zime-mcp connection, say so plainly. If the user
-separately pastes or uploads a transcript file themselves, that's not this
-skill's territory — read it directly in conversation, or use `call-recap`'s
-local mode if a structured recap is what's wanted.
+---
+
+[full transcript text, verbatim as returned]
+```
+
+Rules:
+
+- Relay the transcript **verbatim**. Don't clean it up, re-punctuate,
+  condense, or reorder — its value is that it's exactly what was said.
+- If it's long, deliver it as-is rather than summarizing unprompted. If the
+  user wants a summary, that's `call-recap`.
+- Never merge two calls' transcripts into one answer.
+- Anything you present in quotation marks elsewhere must have come from
+  here, not from a synthesis tool's paraphrase.
+
+## Tips
+
+1. **Narrow the date range** — transcripts are big; the wrong one is costly.
+2. **Resolve first if unsure** — run `get-meeting` to pick the call, then
+   pass its `call_id` here.
+3. **Quotes must come from here** — if you need something in quotation
+   marks, fetch it rather than paraphrasing a summary.
+
+## Local mode (only when no zime-mcp server is connected)
+
+If the user provides a transcript file (`.txt`, `.vtt`, `.json`, `.md`), read
+it and say the answer is limited to that file. No file and no connection →
+say so rather than reconstructing what was probably said.
 
 ## What this sends where
 
-MCP mode sends only the query words, dates, and (when pinning) a call_id
-to the zime-mcp server.
+MCP mode sends only the query words, date range, and (when pinning) a
+`call_id` to the zime-mcp server. Local mode reads only the provided file.
+
+## Related Skills
+
+- **get-meeting** — identify which call first
+- **call-recap** — a structured summary instead of raw text
+- **sales-asset-builder** — turn an exact quote into collateral
