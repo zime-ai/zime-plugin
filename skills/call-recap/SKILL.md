@@ -1,6 +1,6 @@
 ---
 name: call-recap
-description: Produces a detailed, structured recap of one recorded sales call — overview, key decisions and commitments, risks and blockers, action items grouped by owner, and open questions, with speakers and timestamps. Use whenever someone asks what happened on a past recorded call — a recap, summary, debrief, notes, minutes, action items, or "catch me up on my call with X" — even if they never say the word "recap". Always calls the generate_call_recap tool on the zime-mcp server when connected — never hand-builds the recap in its place — and handles the tool's two-phase disambiguation (candidate lists, pinning a call_id). Falls back to recapping a user-provided transcript only when no zime-mcp server is available.
+description: Produces a structured recap of ONE past recorded call — overview, decisions, risks, action items, and questions to clarify next. Use whenever someone wants to know what happened on a specific call — "recap my Acme call", "what happened on the Northwind demo", "summarize yesterday's Concerto QBR" — even if they never say "recap". Resolves the call with list_meetings, then delegates the recap to the Zime call agent via ask_call_brain; never writes the recap from memory or from the raw transcript in the agent's place. Falls back to recapping a user-provided transcript only when no zime-mcp server is available.
 license: MIT
 metadata:
   zime:category: cross-stage
@@ -10,93 +10,142 @@ metadata:
 
 # Call Recap
 
-Turns "what happened on my Sprinto call?" into a complete, skimmable recap.
-Zime's call AI agent produces it from the full transcript plus the call's
-extracted signals (objections, commitments, action items) — data no chat
-context can match. This skill's job is to reach that agent correctly and
-deliver what it returns, whole.
+Turns "what happened on the Acme call?" into a structured recap. The Zime
+call agent reads the full transcript plus the call's extracted signals and
+linked CRM record — so the recap reflects what the workspace knows, not just
+what a transcript literally says.
+
+## How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         CALL RECAP                               │
+├─────────────────────────────────────────────────────────────────┤
+│  STEP 1 — RESOLVE (this skill)                                   │
+│  ✓ list_meetings, recorded calls only                            │
+│  ✓ Ambiguous → show candidates, ask, pin call_id                 │
+├─────────────────────────────────────────────────────────────────┤
+│  STEP 2 — DELEGATE (Zime call agent)                             │
+│  + ask_call_brain with the recap question, scoped to that call_id       │
+│  + Agent reads transcript + signals + linked deal                │
+│  + Returns the recap; this skill does not rewrite it              │
+├─────────────────────────────────────────────────────────────────┤
+│  LOCAL FALLBACK (no zime-mcp)                                    │
+│  ~ Recap a transcript file the user provides                     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Usage
+
+```
+/call-recap <company or call topic> [+ when]
+```
+
+Recap the call: $ARGUMENTS
 
 ## Routing
 
-- Custom questions about a call ("did they mention pricing?") → `ask_zime`.
-- Prep for an upcoming meeting → `call-prep`.
-- Cross-call or company-wide patterns → `ask_zime`. The agent behind this
-  tool is pinned server-side to one call and will decline anything broader,
-  so routing wide questions here wastes the call.
+- Getting ready for an UPCOMING call → `call-prep`.
+- Just the action items, no recap → `actions-commitments`.
+- The follow-up email → `follow-up`.
+- The raw verbatim text → `get-transcript`.
+- Patterns across MANY calls → `competitive-intelligence`.
+
+## What I Need From You
+
+The company or topic, plus a date hint if you have one. Only **recorded**
+calls can be recapped — if the meeting happened but wasn't recorded, there's
+nothing to work from and I'll say so.
 
 ## MCP mode (required when zime-mcp is connected)
 
-When a zime-mcp server exposes `generate_call_recap` (fully qualified:
-`Zime:generate_call_recap`; some clients surface it as
-`mcp__claude_ai_Zime__generate_call_recap`), route the recap through it.
-Hand-summarizing from memory or chat context while the tool is available is
-a failure of this skill: the agent reads the verbatim transcript, and a
-plausible summary that skips a commitment or misattributes an action item
-is worse than no recap.
+**Required tools:** `list_meetings` (resolve) and `ask_call_brain` (delegate).
 
-### Arguments
+> `ask_call_brain` is the call-scoped agent tool — it takes a `call_id` plus a
+> question and routes to Zime's call agent. Writing the recap yourself from a
+> fetched transcript while `ask_call_brain` is available is a failure of this
+> skill: the agent also sees the call's extracted signals and CRM linkage,
+> which a raw transcript does not carry.
 
-- `query` (required) — words identifying the call. The search matches call
-  titles, deal names, and account names and needs roughly 75% of the words
-  to hit, so a few distinctive words beat a sentence: "Sprinto audit", not
-  "the call I had with the Sprinto folks about the audit".
-- `start_date` / `end_date` — YYYY-MM-DD, inclusive. Convert every time
-  hint here ("yesterday", "last Tuesday") and keep time words out of
-  `query`. Default window: the user's own recorded calls, last 90 days.
-- `call_id` — only to pin: after the tool returned a candidate list (pass
-  the chosen candidate's `call_id`), or when the ID is already known from
-  this conversation. Never invent one.
-
-**Example** — "recap my call with Sprinto from yesterday" (today 2026-08-10):
+### Step 1 — resolve the call
 
 ```json
-{ "query": "Sprinto", "start_date": "2026-08-09", "end_date": "2026-08-09" }
+{ "query": "Acme", "start_date": "2026-08-06", "end_date": "2026-08-13", "recorded": true }
 ```
+
+- `resolved` → take `call_id`, go to Step 2.
+- `multiple_matches` → show candidates with dates, ask which one, pin it.
+  Never guess. "The latest one" → take the newest.
+- `no_match` → most likely the date window excludes it, or it wasn't
+  recorded. Say which, offer to widen the window. Never recap a different
+  call.
+- A resolved row with `has_transcript: false` → the meeting happened but
+  wasn't recorded. Say that; don't proceed to Step 2.
+
+### Step 2 — delegate to the call agent
+
+```json
+{ "call_id": "<call_id>", "question": "Give me a structured recap of this call: overview, key decisions and commitments, risks and blockers, action items by owner, and questions to clarify next time." }
+```
+
+Resolve pronouns to real names in the question — the agent has no memory of
+this conversation.
 
 ### Outcomes
 
-- **A recap** — deliver it per Output below.
-- **A candidate list** — JSON with `status` (`multiple_matches` or
-  `no_match`), a `message`, and up to 5 `candidates` (call_id, title, date,
-  account_name, deal_name), newest first. On `no_match` the candidates are
-  the user's most recent recorded calls, offered as a fallback — present
-  them as such, not as matches. Show title/date/account, ask which call the
-  user means, then re-call with the chosen `call_id`. Exception: when the
-  user asked for their "latest" or "most recent" call, take the first
-  candidate and re-call without asking.
-- **An error** — `{"error": "<CODE>"}`. `INTERNAL_ERROR` and `STREAM_ERROR`
-  are usually transient: retry once. `UNAUTHORIZED` means the Zime
-  connection needs re-authorizing — say so. `INVALID_DATE_RANGE` means the
-  dates are malformed or reversed — fix and re-call. If it still fails, say
-  plainly the recap service couldn't be reached and offer the local
-  fallback. Never substitute a hand-written recap and present it as
-  tool-backed.
+- **A recap** (prose/markdown) — deliver per Output below.
+- **The agent declines or has nothing** — say so plainly and don't fill the
+  gap from the transcript yourself.
+- **An error** — `{"error": "<CODE>"}`. `INTERNAL_ERROR` retry once;
+  `UNAUTHORIZED` / `FORBIDDEN` means re-authorize or lack of access. If it
+  fails twice, say plainly the recap service couldn't be reached and offer
+  the local fallback — never present a hand-written recap as agent-backed.
 
 ## Output
 
-The agent returns the recap already structured — overview, decisions and
-commitments, risks and blockers, action items grouped by owner, questions
-for the next touch — with speakers, timestamps, and clean formatting (bold
-headings only). It is the finished deliverable, not raw material:
+The agent's recap **is** the deliverable. This skill adds only the envelope:
 
-- Reproduce it in full — every section, item, timestamp, and caveat. A
-  marker like "owner not clearly assigned" is a finding the agent made
-  deliberately; keep it.
-- Add nothing the recap doesn't support, and reformat only if the user
-  explicitly asked for a different shape.
-- Follow-up edits ("shorten it", "just the action items") work from the
-  returned recap in conversation — no second tool call needed.
+```markdown
+**Recap — [call title]** · [date] · [attendees]
+**Linked deal:** [deal name, or none]
+
+[the agent's returned recap, relayed as-is]
+```
+
+Rules:
+
+- Relay the recap **as-is** — don't re-rank sections, condense, or drop
+  items. If it returned five action items, deliver five.
+- Preserve any timestamps, owner names, and severity markers it includes;
+  those are the parts a rep acts on.
+- Don't add sections the agent didn't return. No invented next steps.
+- Anything in quotation marks must have come from `get_transcript`, not from
+  the agent's paraphrase. If the user wants an exact quote, fetch it.
+
+## Tips
+
+1. **Date-bound it** — "my Acme call" over a 90-day window usually needs
+   disambiguating.
+2. **Recorded only** — unrecorded meetings can't be recapped, however recent.
+3. **Need the exact words?** Use `get-transcript` alongside this.
+4. **Recapping several calls?** That's `competitive-intelligence` or
+   `actions-commitments`, not this one call at a time.
 
 ## Local mode (only when no zime-mcp server is connected)
 
-If the user provides or pastes a transcript, build the recap from it with
-the same section structure, and open with one line saying it was built from
-the provided transcript only, without Zime's call insights. Every item
-cites a quote or timestamp from that transcript. No transcript, no recap:
-ask for one or for the Zime connection.
+If the user provides a transcript (`.txt`, `.vtt`, `.json`, `.md`), recap
+that file only. Open with one line saying the recap covers the provided
+transcript, without the call's extracted signals or CRM linkage. Mark gaps as
+gaps rather than inferring decisions that were never stated.
 
 ## What this sends where
 
-MCP mode sends only the query words, dates, and (when pinning) a call_id to
-the zime-mcp server; the transcript never leaves Zime. Local mode reads
-only the file or text the user provided.
+MCP mode sends the query words and date range (to `list_meetings`), then a
+`call_id` and the recap question (to `ask_call_brain`). Local mode reads only the
+file the user provided.
+
+## Related Skills
+
+- **actions-commitments** — just the open items, across calls
+- **follow-up** — the email that follows this recap
+- **get-transcript** — the verbatim text
