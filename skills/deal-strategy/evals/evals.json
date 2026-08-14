@@ -5,10 +5,10 @@
       "id": 1,
       "name": "deal-strategy-eval-1-objections-routes-to-get-deal-objections",
       "prompt": "with zime-mcp connected, user asks: 'what pushback have we gotten on the Swisscom deal?'",
-      "expected_output": "The skill calls get_deal_objections rather than ask_zime, since the request is specifically and only about objections in one named deal.",
+      "expected_output": "The skill calls get_deal_objections rather than ask_zime_brain, since the request is specifically and only about objections in one named deal.",
       "files": [],
       "expectations": [
-        "get_deal_objections is called, not ask_zime, for a pure objections question",
+        "get_deal_objections is called, not ask_zime_brain, for a pure objections question",
         "The query contains the deal/account name, not a full sentence"
       ]
     },
@@ -16,10 +16,10 @@
       "id": 2,
       "name": "deal-strategy-eval-2-strategy-routes-to-ask-zime",
       "prompt": "user asks: 'why are we losing to Concerto Robotics on the Acme deal, and what should the rep do?'",
-      "expected_output": "The skill calls ask_zime rather than get_deal_objections, since the request is prescriptive/comparative, not a pure objections lookup.",
+      "expected_output": "The skill calls ask_zime_brain rather than get_deal_objections, since the request is prescriptive/comparative, not a pure objections lookup.",
       "files": [],
       "expectations": [
-        "ask_zime is called for the prescriptive strategy question",
+        "ask_zime_brain is called for the prescriptive strategy question",
         "get_deal_objections is not called for a question broader than pure objections"
       ]
     },

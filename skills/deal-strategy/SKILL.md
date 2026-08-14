@@ -1,174 +1,163 @@
 ---
 name: deal-strategy
-description: Handles two deal-level jobs — every objection raised in one deal (severity, addressed status, across its calls and CRM record), and prescriptive deal strategy/coaching (how to win, why a deal is stalling, positioning vs. a competitor, playbook vs. reality). Use for pushback/concerns/objections in a named deal — "what's holding Swisscom back" — or how to win/save/advance one — "why are we losing to Concerto Robotics on Acme" — even if they never say "objections". Always calls get_deal_objections for the objections half and ask_zime for the coaching half on zime-mcp when connected — never hand-builds either answer — and handles get_deal_objections's disambiguation (candidate lists, pinning a deal_id). Falls back to extracting objections from a transcript/CRM export for the objections half only; no local equivalent exists for coaching.
+description: Deep-dives ONE deal — where it actually stands, the objections and risks in play, who the stakeholders are, and the concrete moves to advance it. Use whenever someone wants to think through a single deal — "how do I win the Acme deal", "what's blocking Northwind", "what are the objections on Concerto", "what should I do next on this deal" — even if they never say "strategy". Resolves the deal with list_deals, then delegates the analysis to the Zime deal agent via ask_deal_brain; never substitutes generic sales advice for the agent's grounded read of the real calls and CRM record. Falls back to a narrower read of a user-provided transcript or CRM export only when no zime-mcp server is available.
 license: MIT
 metadata:
   zime:category: cross-stage
   zime:dimension: initiative
-  zime:input-modes: mcp,transcript
+  zime:input-modes: mcp,transcript,csv
 ---
 
 # Deal Strategy
 
-Two related jobs, one skill:
+Turns "how do I win the Acme deal?" into a grounded read of that specific
+deal. The Zime deal agent sees every call on the deal, its extracted signals
+(objections, risks, buying signals, commitments), and the CRM record — so the
+answer is about this deal, not deals in general.
 
-1. **Objections** — "what pushback have we gotten on Acme?" The full,
-   deal-wide list of objections across every call and CRM record linked to
-   that deal, with severity and addressed/unaddressed status.
-2. **Strategy & coaching** — "how do I win this?", "why are we losing to
-   Competitor X?", "what should I do next?" Prescriptive advice grounded in
-   the deal's actual calls, CRM state, and playbook.
+## The line this skill holds
 
-## Decision rule (read this first)
+Generic sales advice is the failure mode here. "Multi-thread the account" and
+"create urgency" are true of every deal and therefore useless about this one.
+If the agent returns nothing on a dimension, this skill says the dimension is
+unknown rather than filling it with best-practice filler.
 
-Ask: is the request specifically and *only* about objections, pushback, or
-concerns in one named deal?
+## How It Works
 
-- **Yes, and nothing broader** → call `get_deal_objections`. It is scoped
-  server-side to exactly one deal and returns nothing beyond the objection
-  list.
-- **No — it's prescriptive, comparative, or broader** ("how do I win", "why
-  are we losing", "what should I do", positioning against a named
-  competitor, playbook-vs-reality) → call `ask_zime` instead.
-  `get_deal_objections`'s own agent is pinned server-side to objections in
-  one deal and will decline anything broader — sending a strategy question
-  there wastes a call and gets a refusal.
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                       DEAL STRATEGY                              │
+├─────────────────────────────────────────────────────────────────┤
+│  STEP 1 — RESOLVE (this skill)                                   │
+│  ✓ list_deals → one deal_id                                      │
+│  ✓ Ambiguous → show candidates, ask, pin                         │
+├─────────────────────────────────────────────────────────────────┤
+│  STEP 2 — DELEGATE (Zime deal agent)                             │
+│  + ask_deal_brain, scoped to that deal_id                              │
+│  + Agent reads all calls on the deal + signals + CRM             │
+│  + Returns the analysis; this skill does not re-reason it         │
+├─────────────────────────────────────────────────────────────────┤
+│  LOCAL FALLBACK (no zime-mcp)                                    │
+│  ~ Narrower read of a provided transcript or CRM export          │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-A single conversation may legitimately need both, back to back: objections
-first via `get_deal_objections`, then a follow-up like "so how do I overcome
-that pricing one?" goes to `ask_zime`, carrying the objection forward as
-context (see Output below — `ask_zime` has no memory of the prior call).
+## Usage
+
+```
+/deal-strategy <deal or account name>
+```
+
+Work through the deal: $ARGUMENTS
 
 ## Routing
 
-- Next steps / commitments in this ONE deal → `actions-commitments`.
-- Plain CRM facts only (stage, amount, owner, close date) → `get-deal`.
-- Cross-deal objection or strategy patterns ("what objections are common in
-  POC stage", "how are we doing across the pipeline") → `ask_zime` or
-  `pipeline-review`; neither tool in this skill resolves more than one deal.
-- Competitor-specific patterns across MANY deals ("where are we losing to
-  Competitor X in general") → `competitive-intelligence`. A single named
-  deal's positioning against a competitor stays here, routed to `ask_zime`.
-- Objections or strategy questions about ONE specific call rather than the
-  whole deal → `call-recap` shows objections in that call's context;
-  `ask_zime` still covers call-specific coaching questions.
+- Just the deal's fields (stage, amount, close date) → `get-deal`.
+- Open commitments and owners → `actions-commitments`.
+- MANY deals, totals, what's stuck → `pipeline-review`.
+- Competitor patterns across deals → `competitive-intelligence`.
+- Preparing for a specific upcoming call on this deal → `call-prep`.
+
+## What I Need From You
+
+The deal or account name. If the user has a specific angle ("they went quiet",
+"pricing is the blocker", "I need a path to close this quarter"), pass it
+through — it focuses the agent's analysis.
 
 ## MCP mode (required when zime-mcp is connected)
 
-Both tools live on the same zime-mcp server (fully qualified `Zime:<tool>`;
-some clients surface them as `mcp__claude_ai_Zime__<tool>`). Route through
-whichever the decision rule above selects. Answering from chat context
-while the tool is available is a failure of this skill: only these agents
-see the full call history, classified signals, and CRM state together.
+**Required tools:** `list_deals` (resolve) and `ask_deal_brain` (analyze).
 
-### Objections half — `get_deal_objections(query, start_date?, end_date?, deal_id?)`
+> `ask_deal_brain` is the deal-scoped agent tool — a `deal_id` plus a question,
+> routed to Zime's deal agent. Answering from general sales knowledge while
+> it's available is a failure of this skill.
 
-- `query` (required) — words identifying the deal: deal, company, or
-  account name. The search matches deal and account names and needs roughly
-  75% of the words to hit, so a few distinctive words beat a sentence:
-  "Swisscom", not "our big deal with the Swisscom team".
-- `start_date` / `end_date` — YYYY-MM-DD, inclusive. Convert time hints
-  here and keep time words out of `query`. The window scopes which deals
-  are searched by recent call activity (default last 90 days) — it does not
-  filter which objections are returned.
-- `deal_id` — only to pin: after the tool returned a candidate list (pass
-  the chosen candidate's `deal_id`), or when the ID is already known from
-  this conversation. Never invent one.
-
-**Example** — "what pushback have we gotten in the Swisscom deal?":
+### Step 1 — resolve the deal
 
 ```json
-{ "query": "Swisscom" }
+{ "query": "Acme expansion" }
 ```
 
-**Outcomes**
+Note: deals are **not** date-scoped by default — a deal that closed two years
+ago is still a legitimate subject. Only pass dates if the user bounded it.
 
-- **An answer** — deliver it per Output below.
-- **A candidate list** — JSON with `status` (`multiple_matches` or
-  `no_match`), a `message`, and up to 5 `candidates` (deal_id, deal_name,
-  account_name, stage, last_call_date), one per deal, ordered by most
-  recent call activity. On `no_match` the candidates are the deals with the
-  user's most recent call activity, offered as a fallback — present them as
-  such. Show name/account/stage/last-call date, ask which deal the user
-  means, then re-call with the chosen `deal_id`.
-- **An error** — `{"error": "<CODE>"}`. `INTERNAL_ERROR` and `STREAM_ERROR`
-  are usually transient: retry once. `UNAUTHORIZED` means the Zime
-  connection needs re-authorizing — say so. `INVALID_DATE_RANGE` means the
-  dates are malformed or reversed — fix and re-call. If it still fails, say
-  plainly the deal-analysis service couldn't be reached. Never substitute a
-  from-memory objection list.
+`multiple_matches` → show candidates with stage and amount so they're
+distinguishable, ask which one, pin it. `no_match` → say the naming or access
+likely explains it; never analyze a similarly-named deal.
 
-### Strategy half — `ask_zime(question)`
-
-`ask_zime` is Zime's general-purpose AI agent; its own description
-explicitly covers coaching and strategy — how to win, why deals are lost,
-what to do next, how reps are positioning, playbook vs. reality — alongside
-deal/pipeline intelligence and call-derived signals. It enforces access
-control server-side and has no memory of earlier turns.
-
-- Send the question close to verbatim, but resolve pronouns and references
-  into the actual entity first — "this deal" becomes the deal's real name,
-  since `ask_zime` cannot see this conversation.
-- If an objection surfaced earlier in the same conversation (from
-  `get_deal_objections`) is relevant to a follow-up strategy question, fold
-  it into the question text — `ask_zime` won't otherwise know it happened.
-
-**Example** — "why are we losing to Concerto Robotics on the Acme deal?":
+### Step 2 — delegate the analysis
 
 ```json
-{ "question": "Why are we losing to Concerto Robotics on the Acme deal?" }
+{ "deal_id": "<deal_id>", "question": "Where does this deal actually stand? Cover: the objections and risks in play, the stakeholders and who is championing us, what has moved and what has stalled, and the two or three concrete moves that would most advance it." }
 ```
 
-**Example** — a strategy follow-up carrying forward an earlier objections
-result:
+If the user gave an angle, append it verbatim: *"The rep says they've gone
+quiet since the security review — factor that in."* Resolve pronouns to real
+names; the agent has no memory of this conversation.
 
-```json
-{ "question": "In the Acme deal, the main open objection is pricing versus Concerto Robotics's bundled tier. How should the rep overcome that and move the deal forward?" }
-```
+### Outcomes
 
-**Outcomes**
-
-- **An answer** — deliver it per Output below.
-- An error or access-control refusal — say plainly what happened; never
-  substitute a hand-built strategy in its place.
+- **An analysis** — deliver per Output below.
+- **Thin or empty on some dimension** — relay that honestly ("no objections
+  surfaced in the calls on this deal") rather than supplying generic ones.
+- **An error** — `{"error": "<CODE>"}`. `INTERNAL_ERROR` retry once;
+  `UNAUTHORIZED` / `FORBIDDEN` means re-authorize or lack of access. If it
+  fails twice, say plainly the deal agent couldn't be reached and offer the
+  local fallback — never pass generic advice off as a grounded read.
 
 ## Output
 
-**Objections half.** The agent's answer already grades each item —
-explicit objection versus unresolved concern versus mild hesitation — with
-severity, where it surfaced, and addressed/unaddressed status. Those
-distinctions are the analysis; a rep acts differently on an explicit
-unaddressed pricing objection than on a mild hesitation:
+The agent's analysis **is** the deliverable. This skill adds the envelope so
+the rep can see which deal was analyzed and its hard facts:
 
-- Reproduce the answer in full with every objection, its severity, and its
-  status intact. Open (unaddressed) objections lead — they're what the rep
-  acts on.
-- "No supported objections in this deal" is a real finding — deliver it
-  briefly and plainly.
-- Add nothing the answer doesn't support; reformat only if the user
-  explicitly asked.
+```markdown
+**Deal strategy — [deal name]** · [account]
+**Stage:** [stage] · **Amount:** [amount] · **Close:** [close date] · **Owner:** [owner]
 
-**Strategy half.** Per `ask_zime`'s own "USING THE RESULT" guidance, relay
-its full answer without truncation, paraphrasing, or trimming — it has
-already scoped and grounded the advice in the deal's actual evidence. Add
-nothing it doesn't support.
+[the agent's returned analysis, relayed as-is]
+
+_Grounded in this deal's calls and CRM record via Zime._
+```
+
+Rules:
+
+- Relay the analysis **as-is** — don't re-rank the risks, merge the moves, or
+  round the numbers. The ordering is part of the judgment.
+- Keep evidence and dates where the agent attached them. "Raised on the Jun 18
+  call" is what makes a risk actionable rather than an assertion.
+- Don't append your own recommendations. If the agent surfaced two moves,
+  deliver two — a third from general knowledge would be indistinguishable in
+  presentation but not grounded.
+- Where a dimension came back empty, state it as unknown. Unknown is
+  information: it often means nobody asked on the calls.
+
+## Tips
+
+1. **Give the angle you care about** — "they've gone quiet" produces a sharper
+   read than an open-ended ask.
+2. **Deals aren't time-bounded** — don't add a date range unless you mean it;
+   it can hide the deal entirely.
+3. **Unknown is a finding** — no objections surfaced often means discovery was
+   thin, not that the deal is clean.
+4. **One deal at a time** — for cross-deal patterns use `pipeline-review` or
+   `competitive-intelligence`.
 
 ## Local mode (only when no zime-mcp server is connected)
 
-**Objections half only.** If the user provides call transcripts or a CRM
-export for the deal, extract objections from those files only — each with a
-direct quote or field citation, severity as stated (never inferred beyond
-the evidence), and addressed/unaddressed status only when the sources show
-a response. Open with one line saying the analysis covers only the provided
-files, not the full deal history.
-
-**Strategy half.** There is no local equivalent. Prescriptive coaching
-depends on `ask_zime`'s live, cross-source analysis of the deal — say
-plainly that strategy/coaching advice isn't available without a zime-mcp
-connection rather than improvising it from whatever files are on hand.
+If the user provides a transcript or CRM export, give a narrower read of those
+files only, with every claim traced to a line or field in them. Open with one
+line saying the read covers only the provided files, so signals from other
+calls on this deal are missing by construction. Mark gaps as gaps rather than
+filling them with standard playbook advice.
 
 ## What this sends where
 
-MCP mode sends only the query words, dates, and (when pinning) a deal_id to
-`get_deal_objections`, or the resolved question text to `ask_zime` — nothing
-else leaves this skill. Local mode reads only the files the user provided.
+MCP mode sends the query words (to `list_deals`), then a `deal_id` and the
+analysis question (to `ask_deal_brain`). Local mode reads only the provided files.
+
+## Related Skills
+
+- **get-deal** — the deal's raw fields
+- **actions-commitments** — what's still open on it
+- **sales-asset-builder** — build collateral from this deal's evidence
+- **pipeline-review** — the same lens across many deals
