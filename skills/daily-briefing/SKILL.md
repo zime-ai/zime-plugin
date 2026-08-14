@@ -1,153 +1,160 @@
 ---
 name: daily-briefing
-description: Assembles a morning briefing of what's on the rep's plate today — today's meetings, deals needing attention, and open action items or follow-ups due — by orchestrating one or more ask_zime calls and presenting the results grouped by section, not fully resolving every flagged item itself. Use whenever someone wants a rundown of their day or open plate — "what's on my plate today", "give me my morning briefing", "what do I need to look at before I start my day" — even if they never say "briefing" or "daily". Always calls the ask_zime tool on the zime-mcp server when connected, scoped to the facets asked for — never hand-builds the briefing from memory, and never invents a calendar-listing tool (zime-mcp has no get_todays_meetings or list_meetings; get_call resolves only one call, not a calendar, so even "what meetings do I have today" goes through ask_zime). Has no local fallback: without a connection there is no calendar or action-item data to read locally, so it says that plainly.
+description: Gives the rep their day — today's meetings, what changed on their deals, and what needs attention now. Use whenever someone asks for their day or week at a glance — "what's my day look like", "brief me for today", "what do I need to know this morning", "what changed on my deals", "what's on my plate" — even if they never say "briefing". Delegates to the Zime instant agent via ask_zime_brain with no resolve step, since the scope is the rep's whole day rather than one entity; never assembles the briefing from memory or chat context. Optionally lists today's meetings with list_meetings for a concrete schedule. Falls back to a user-provided calendar or CRM export only when no zime-mcp server is available.
 license: MIT
 metadata:
   zime:category: cross-stage
   zime:dimension: initiative
-  zime:input-modes: mcp
+  zime:input-modes: mcp,csv
 ---
 
 # Daily Briefing
 
-Answers "what's on my plate today?" by pulling together three things a rep
-starts the day needing: today's meetings, deals that need attention this
-week, and action items or follow-ups that are due. No single zime-mcp tool
-produces that combined view — this skill's job is to ask `ask_zime` for
-each facet the user actually wants, then lay the answers out grouped and
-skimmable. It is an orchestrator over `ask_zime`, not a wrapper over a
-dedicated briefing tool, because none exists.
+Answers "what do I need to know this morning?" — the day's meetings, what
+moved on the deals, and what's about to slip. Optimized for speed: this is the
+skill a rep runs before their first call, so it uses Zime's instant agent
+rather than the deep one.
+
+## How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      DAILY BRIEFING                              │
+├─────────────────────────────────────────────────────────────────┤
+│  NO ENTITY RESOLVE                                               │
+│  ✓ Scope is the rep's whole day — nothing to pin                 │
+├─────────────────────────────────────────────────────────────────┤
+│  OPTIONAL — CONCRETE SCHEDULE                                    │
+│  ✓ list_meetings for today's actual meetings, with times         │
+├─────────────────────────────────────────────────────────────────┤
+│  DELEGATE (Zime instant agent)                                   │
+│  + ask_zime_brain for what changed and what needs attention            │
+│  + Fast tier by design — this runs before the first call         │
+├─────────────────────────────────────────────────────────────────┤
+│  LOCAL FALLBACK (no zime-mcp)                                    │
+│  ~ Read a calendar or CRM export the user provides               │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Usage
+
+```
+/daily-briefing [today | this week | date]
+```
+
+Brief me for: $ARGUMENTS
 
 ## Routing
 
-- A bare "what meetings do I have today/this week", with nothing else
-  asked for → `ask_zime` directly; no need to run the full three-section
-  briefing for a single-facet question.
-- A bare "what are my open action items", with nothing else asked for →
-  `ask_zime` directly, same reasoning.
-- A bare "which deals need attention" / pipeline-risk question, with
-  nothing else asked for → `ask_zime` directly (or a pipeline-level skill
-  if one is available).
-- Once the briefing surfaces ONE upcoming meeting the user wants to get
-  ready for → `call-prep`.
-- Once the briefing flags ONE deal the user wants to dig into → `get-deal`
-  for the record, `actions-commitments` for its committed/scheduled next
-  steps, or `deal-strategy` for its objections or coaching — whichever
-  matches what they actually asked next.
-- Once the briefing surfaces ONE call that needs a recap or a follow-up
-  email → `call-recap` or `follow-up`.
-- This skill's own job stops at presenting the raw briefing content,
-  grouped; it does not silently chain into five other tool calls trying to
-  fully resolve every flagged item on the user's behalf — that chaining
-  only happens on the user's explicit follow-up, via the hand-offs above.
+- Prep for ONE specific upcoming call → `call-prep`. This skill lists the
+  day; that one prepares you for a meeting.
+- Full pipeline health across many deals → `pipeline-review`.
+- One deal in depth → `deal-strategy`.
+- Everything outstanding regardless of today → `actions-commitments`.
+
+## What I Need From You
+
+Nothing. Default to today. Accept "this week" or a specific date if given.
 
 ## MCP mode (required when zime-mcp is connected)
 
-When a zime-mcp server exposes `ask_zime` (fully qualified: `Zime:ask_zime`;
-some clients surface it as `mcp__claude_ai_Zime__ask_zime`), route every
-facet of the briefing through it. There is no calendar-listing tool and no
-plural "get my meetings/deals/action-items" tool on zime-mcp — `ask_zime`
-is not a fallback here, it is the only correct way to answer "what's on my
-plate today", and hand-building any part of the briefing from memory while
-it's available is a failure of this skill.
+**Required tool:** `ask_zime_brain`. **Recommended:** `list_meetings` for the
+schedule.
 
-### Arguments
+Assembling the briefing from memory or from deals mentioned earlier in the
+chat is a failure of this skill — the point is what changed since the rep last
+looked, which by definition isn't in the conversation.
 
-`ask_zime` takes one argument:
+### Step 1 (optional) — the actual schedule
 
-- `question` (required) — send it close to the user's own wording, keeping
-  first-person phrasing like "my" intact; the tool identifies the asker and
-  enforces access control server-side, so it needs "my meetings", not "the
-  user's meetings". It has no memory of earlier turns, so each call must be
-  fully self-contained.
-
-Cover the three facets — meetings today, deals needing attention, action
-items due — with either of two acceptable shapes, matching what the user
-actually asked for:
-
-1. **Separate, focused calls**, one per facet the user wants, when the
-   request is broad ("what's on my plate today") or when a facet needs its
-   own time window. Preferred when the facets don't share a single natural
-   phrasing, so each question stays scoped to what it needs rather than
-   over-fetching.
-2. **One combined question**, when the user's own phrasing already spans
-   the facets naturally ("give me my morning briefing — meetings, action
-   items, and anything urgent on my deals").
-
-Either way, ask for exactly the facets requested — don't add a fourth
-question the user didn't ask for, and don't collapse three distinct asks
-into one vague question that makes the agent guess what "everything" means.
-
-**Example** — "what's on my plate today?", using three focused calls:
+For a concrete list of today's meetings with times, call `list_meetings` with
+today's date on both ends:
 
 ```json
-{ "question": "what meetings do I have today" }
+{ "query": "", "start_date": "2026-08-13", "end_date": "2026-08-13" }
 ```
+
+This returns both scheduled meetings and recorded calls for the day. Use it
+when the rep wants times and attendees; skip it if they only asked what
+changed.
+
+### Step 2 — delegate the briefing
 
 ```json
-{ "question": "what are my open action items" }
+{ "question": "Brief me for today: what meetings do I have, what changed on my deals since yesterday, and what needs my attention today. Include the specific deal or account behind each item." }
 ```
 
-```json
-{ "question": "which of my deals need attention this week" }
-```
-
-**Example** — a narrower ask ("just tell me what meetings I have with
-Meridian Health today and anything overdue on Northwind Logistics"), using
-one combined call because the user's own phrasing already spans both:
-
-```json
-{ "question": "what meetings do I have with Meridian Health today, and what's overdue on Northwind Logistics" }
-```
+`ask_zime_brain` has no memory of this conversation and no date parameters — put the
+day in the question text. Ask for the deal or account behind each item, or you
+get a list of alerts with nothing to act on.
 
 ### Outcomes
 
-- **An answer** — plain text, already scoped and access-controlled
-  server-side. Deliver it per Output below.
-- **A decline** (out of scope, no access, no data for that facet) — say so
-  plainly for that section rather than filling the gap from another call's
-  answer or from memory.
-- **An error** — `isError: true` with `{"error": "<CODE>"}`.
-  `INTERNAL_ERROR` is usually transient: retry that one call once.
-  `UNAUTHORIZED` means the Zime connection needs re-authorizing — say so
-  for the whole briefing, since every facet depends on the same
-  connection. If a call keeps failing, say plainly that section of the
-  briefing couldn't be reached and still deliver the sections that
-  succeeded — a partial briefing beats withholding all of it over one
-  failed facet.
+- **A briefing** — deliver per Output below.
+- **A quiet day** — "nothing changed and you have no meetings" is a valid,
+  useful answer. Don't manufacture items to fill it out.
+- **An error** — `{"error": "<CODE>"}`. `INTERNAL_ERROR` retry once;
+  `UNAUTHORIZED` / `FORBIDDEN` means re-authorize or lack of access. If it
+  fails twice, say so and offer the local fallback. If only `list_meetings`
+  succeeded, deliver the schedule alone and say the change summary was
+  unavailable — a partial briefing labelled as partial is fine.
 
 ## Output
 
-Present the briefing grouped by facet, skimmable in under a minute, each
-section attributable to the `ask_zime` call that produced it:
+Schedule first (a rep reads this between calls), then what changed.
 
-- **Meetings today** — from the meetings call.
-- **Deals needing attention** — from the deals call.
-- **Action items due** — from the action-items call.
+```markdown
+**Briefing — [date]**
 
-For each section, relay the answer's content in full — don't condense,
-re-rank, or drop distinctions the agent drew (e.g. between a hard deadline
-and a recommended follow-up). Add nothing a call's answer doesn't support.
+### Today's meetings
+| Time | Meeting | Account | Prep |
+|---|---|---|---|
+| [time] | [title] | [account] | [prepped / not prepped] |
 
-A section with nothing to show is a real, deliverable finding, not an
-error: "No open action items surfaced" or "No deals flagged for attention
-this week" is exactly what a clear day looks like — state it plainly
-instead of omitting the section or padding it with a plausible guess. If
-one facet's call failed while the others succeeded, say that section
-couldn't be reached and still show the rest.
+### What changed
+[the agent's returned summary, relayed as-is]
 
-## Local mode
+### Needs attention today
+[the agent's returned items, relayed as-is]
 
-There is no local fallback. A day's calendar, a workspace's live deal
-state, and outstanding action items exist only inside Zime — there is no
-file a user could hand this skill (no calendar export, no transcript) that
-would substitute for actually asking the workspace what's on the plate
-today. Without a zime-mcp connection, say so plainly rather than
-fabricating a schedule, a deal list, or an action-item list from
-conversation history.
+_Live calendar, CRM, and call data via Zime._
+```
+
+Rules:
+
+- Relay the agent's sections **as-is** — don't re-prioritize what needs
+  attention. Ordering is judgment, and reordering it silently overrides that.
+- Keep the account or deal name on every item. An alert without an entity
+  isn't actionable.
+- Keep times exactly as returned, and say which timezone if the tool states
+  one. A briefing with a shifted time is worse than no briefing.
+- If a section came back empty, show it empty. A short honest briefing beats a
+  padded one.
+- Don't fold in items from earlier in the conversation.
+
+## Tips
+
+1. **Run it before your first call** — that's the design point; it uses the
+   fast tier deliberately.
+2. **"This week" works** — say so in the request and it goes into the question.
+3. **Not prepped?** Chain into `call-prep` for the meeting that matters most.
+4. **Wanting depth, not speed?** That's `pipeline-review`.
+
+## Local mode (only when no zime-mcp server is connected)
+
+If the user provides a calendar or CRM export, list the day's meetings and
+flag deals with past-due close dates or missing next steps from that file.
+Open with one line saying the briefing covers only the provided file — so
+"what changed" isn't available, since a static export has no change history.
+Don't infer change from a snapshot.
 
 ## What this sends where
 
-MCP mode sends only the question text — one call per facet, or one
-combined question — to the zime-mcp server; nothing else leaves the
-conversation. Local mode does not exist, so nothing is read from disk.
+MCP mode sends a date range and empty query (to `list_meetings`) and the
+question text (to `ask_zime_brain`). Local mode reads only the provided file.
+
+## Related Skills
+
+- **call-prep** — prepare for the meeting this briefing surfaced
+- **pipeline-review** — the deeper weekly version
+- **actions-commitments** — everything open, not just today

@@ -1,6 +1,6 @@
 ---
 name: competitive-intelligence
-description: Answers cross-deal and cross-call questions about how the team is doing against a named competitor — mention frequency, win/loss framing, how reps are positioning, and what prospects have actually said. Use whenever someone asks about a specific competitor across calls or deals — "how are we doing against Borealis Systems", "why do we keep losing to Borealis Systems" — even if they never say "competitive intelligence". Always calls ask_zime for this cross-deal/cross-call analysis on zime-mcp when connected — never routes it to get_deal_objections, which is pinned to one deal and declines broader questions — then optionally drills into get_transcript (via get-meeting first if the call isn't identified) once one call is pinned, for the exact quoted wording. Falls back to searching only user-provided transcripts for mentions, stating plainly that no win/loss claim is possible from a handful of files, when no zime-mcp server is connected.
+description: Surfaces what customers actually say about competitors — where a named competitor comes up, what they claim, how we're positioned against them, and which patterns repeat across deals. Use whenever someone asks about competitive dynamics — "where is Competitor X showing up", "what do customers say about them", "how do we position against them", "what objections mention competitors" — even if they never say "competitive intelligence". Scopes to one call via ask_call_brain or across the corpus via ask_zime_brain, resolving with list_meetings when a single call is meant; never fills gaps with general market knowledge about the competitor. Falls back to a user-provided transcript only when no zime-mcp server is available.
 license: MIT
 metadata:
   zime:category: cross-stage
@@ -10,149 +10,186 @@ metadata:
 
 # Competitive Intelligence
 
-Answers "how are we doing against Borealis Systems?" and "why do we keep
-losing to Borealis Systems?" with the picture across *many* calls and deals
-at once — mention frequency, how prospects frame the competitor, how reps
-are positioning against it, and where deals were won or lost with it in
-play. That analysis happens server-side, inside Zime's general-purpose
-agent, over the call-derived signals it already extracts (competitor
-mentions are explicitly one of them) and the coaching layer built for
-exactly this ("why am I losing to this competitor", "what's working in won
-deals"). This skill's job is to reach that agent with the competitor named
-explicitly and relay what it returns, whole — then, only if the user wants
-the exact words rather than a synthesis, drill into one identified call's
-transcript.
+Answers "what are customers actually saying about Competitor X?" from the
+workspace's own calls. The value is that it's evidence from real
+conversations, not what the internet says about a competitor — and the two are
+often very different.
+
+## The line this skill holds
+
+General market knowledge about a competitor is the failure mode. What their
+website claims, their published pricing, their reputation — none of that is
+what this skill returns. If the corpus has nothing on a competitor, the answer
+is "nothing in our calls mentions them", not a summary from training data.
+That distinction is the whole point: a rep can act on "three customers raised
+their SSO gap last quarter" and cannot act on "they're generally seen as
+cheaper."
+
+## How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                  COMPETITIVE INTELLIGENCE                        │
+├─────────────────────────────────────────────────────────────────┤
+│  SCOPE FIRST (this skill decides which)                          │
+│  ✓ "on the Acme call"    → list_meetings → ask_call_brain              │
+│  ✓ "across our deals"    → ask_zime_brain (no resolve needed)          │
+├─────────────────────────────────────────────────────────────────┤
+│  DELEGATE (Zime agent)                                           │
+│  + Agent reads real calls, mentions, and extracted signals       │
+│  + Returns evidence with accounts and dates attached             │
+├─────────────────────────────────────────────────────────────────┤
+│  NEVER                                                           │
+│  ✗ Competitor facts from general knowledge                       │
+│  ✗ A "typical" objection nobody actually raised                  │
+├─────────────────────────────────────────────────────────────────┤
+│  LOCAL FALLBACK (no zime-mcp)                                    │
+│  ~ Scan a transcript file the user provides                      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Usage
+
+```
+/competitive-intelligence <competitor> [+ scope] [+ when]
+```
+
+Competitive intel on: $ARGUMENTS
 
 ## Routing
 
-- A single deal's objections that happen to be competitive in nature, where
-  the user wants deal-scoped objection handling (not cross-deal patterns) →
-  `deal-strategy` (or `ask_zime` scoped explicitly to that one deal).
-- A single call's full structured recap (not just the competitor angle) →
-  `call-recap`.
-- Broader win-rate or pipeline health with no named competitor → the
-  question isn't competitive intelligence — route to `pipeline-review`.
-- The exact quoted wording from one already-identified call → stay in this
-  skill's `get_transcript` drill-down below; don't re-ask `ask_zime` for
-  something it can only summarize, not quote verbatim.
+- Objections on ONE deal, competitor or not → `deal-strategy`.
+- A recap of one call that happened to mention a competitor → `call-recap`.
+- Turning competitive evidence into a battlecard or talking points →
+  `sales-asset-builder`.
+- Win/loss rates and pipeline totals → `pipeline-review`.
+
+## What I Need From You
+
+The competitor name. Scope and window help: "on the Acme call" is a different
+question from "across our deals this quarter", and this skill routes them
+differently.
 
 ## MCP mode (required when zime-mcp is connected)
 
-### Primary: `ask_zime`
+**Required tools:** `ask_zime_brain` (cross-corpus). For single-call scope also
+`list_meetings` (resolve) and `ask_call_brain`.
 
-When a zime-mcp server exposes `ask_zime` (fully qualified: `Zime:ask_zime`;
-some clients surface it as `mcp__claude_ai_Zime__ask_zime`), route any
-cross-call or cross-deal competitor question through it. This is the
-mandatory primary tool here — there is no `search_transcripts`,
-`find_calls_mentioning`, or any other plural/search tool on zime-mcp, and
-`ask_zime`'s own description explicitly lists "competitor mentions" under
-call-derived signals and "why am I losing to this competitor" / "what's
-working in won deals" under coaching and strategy. It is the only tool that
-can search or aggregate across calls and deals for a competitor.
+> `ask_call_brain` is the call-scoped agent tool; `ask_zime_brain` routes to Zime's global
+> agent across the whole accessible corpus. Answering from general knowledge
+> about the competitor while either is available is a failure of this skill.
 
-**Do not** route a competitor question to `get_deal_objections` just
-because a competitor mention might be filed as an objection. That tool is
-agent-backed but pinned server-side to exactly one deal and will decline
-anything broader — "how are we doing against Borealis Systems across the
-pipeline" is not a one-deal question, and sending it there is a routing
-failure, not a valid alternative path.
+### Choosing the scope
 
-#### Arguments
+| Request shape | Path |
+|---|---|
+| "did Competitor X come up on the Acme call" | `list_meetings` → `ask_call_brain` |
+| "where is Competitor X showing up" | `ask_zime_brain` directly |
+| "how do we position against them in deals we won" | `ask_zime_brain` directly |
+| "what did they say about them last quarter" | `ask_zime_brain` with the window in the question |
 
-- `question` (required) — the user's own words, sent close to verbatim,
-  with the competitor named explicitly. Never send a vague "that
-  competitor" or "them" — if the competitor's name came from earlier in the
-  conversation, resolve it into the actual name before calling; `ask_zime`
-  has no memory of earlier turns. Preserve scope exactly as given: "my
-  deals" stays "my deals", don't broaden it to the whole team's pipeline
-  unless asked.
+Don't resolve a call when the question is corpus-wide — narrowing to one call
+would silently answer a much smaller question than the one asked.
 
-**Example** — "why do we keep losing to Borealis Systems?":
+### Cross-corpus — `ask_zime_brain`
 
 ```json
-{ "question": "why do we keep losing to Borealis Systems?" }
+{ "question": "Where has Concerto come up in our calls in the last quarter, what did customers say about them, and how did we position against them?" }
 ```
 
-**Example** — "has Borealis Systems come up on any of my calls with Acme
-this quarter?":
+Send the question close to verbatim with the competitor named explicitly and
+the time window stated in the text — `ask_zime_brain` has no memory of this
+conversation and no separate date parameters.
+
+### Single call — `ask_call_brain`
+
+Resolve first:
 
 ```json
-{ "question": "has Borealis Systems come up on any of my calls with Acme this quarter?" }
+{ "query": "Acme", "start_date": "2026-08-01", "end_date": "2026-08-13", "recorded": true }
 ```
 
-##### Outcomes
-
-`ask_zime` returns its answer as text, already scoped and access-controlled
-server-side — deliver it per Output below. If it declines (out of scope, no
-access, no data for the window asked), say so plainly rather than filling
-the gap with a guessed mention count or a remembered impression of the
-competitor.
-
-### Drill-down: `get_transcript`
-
-Once `ask_zime` (or the user) has narrowed things to one specific call
-where the exact quoted wording about the competitor is wanted — not a
-synthesized summary — pull that call's verbatim transcript. If the specific
-call isn't already identified (only a company or rough timeframe is
-known), resolve it first via `get-meeting` (`get_call`); don't guess a
-`call_id`.
-
-When zime-mcp exposes `get_transcript` (fully qualified:
-`Zime:get_transcript`; some clients surface it as
-`mcp__claude_ai_Zime__get_transcript`), call it with:
-
-- `query` — company, attendee, or topic words identifying the call. Omit if
-  `call_id` is already known.
-- `call_id` — pin an exact call, from a prior `multiple_matches` response
-  or already known in this conversation. Never invent one.
-- `start_date` / `end_date` — YYYY-MM-DD, inclusive. Defaults to the last
-  90 days.
-
-**Example** — after `ask_zime` points to the Acme call where Borealis
-Systems came up, pulling the exact wording:
+then:
 
 ```json
-{ "query": "Acme", "start_date": "2026-07-01", "end_date": "2026-08-13" }
+{ "call_id": "<call_id>", "question": "Did Concerto or any competitor come up on this call? What exactly was said, and how did we respond?" }
 ```
 
-It returns `{"status": "resolved"|"multiple_matches"|"no_match", "data"?,
-"candidates"?}`, or an error (`UNAUTHORIZED`/`FORBIDDEN`/
-`INVALID_ARGUMENT`/`INTERNAL_ERROR`) — handle exactly as `get-transcript`
-documents: show candidates on `multiple_matches` and ask which call, say so
-plainly on `no_match`, retry once on `INTERNAL_ERROR`, never substitute a
-remembered or invented quote.
+### Outcomes
+
+- **Evidence returned** — deliver per Output below.
+- **Nothing found** — say plainly that nothing in the accessible calls
+  mentions this competitor, and stop. Do **not** supplement with what you know
+  about them from elsewhere. A clean "no mentions" is a real answer and often
+  a useful one.
+- **An error** — `{"error": "<CODE>"}`. `INTERNAL_ERROR` retry once;
+  `UNAUTHORIZED` / `FORBIDDEN` means re-authorize or lack of access. If it
+  fails twice, say so and offer the local fallback.
 
 ## Output
 
-Relay `ask_zime`'s full answer without truncation — every deal it names,
-every framing pattern, every caveat, in the order given. This mirrors
-`ask_zime`'s own guidance for using its result: the agent already decided
-what matters and in what order, and condensing "mentioned in six deals,
-lost three" down to "comes up sometimes" throws away the distinction a rep
-or manager acts on.
+Evidence-first, because a claim without an account and a date can't be used in
+front of a customer.
 
-- Don't drop caveats (e.g. "based on calls in the last 90 days") to make
-  the answer shorter.
-- Add nothing the answer doesn't state — no mention count, no win/loss
-  number, no positioning tip the agent didn't give.
-- When a `get_transcript` drill-down pulls an exact quote, present it as a
-  direct quote attributed to its call and date — never blend it into the
-  `ask_zime` synthesis as if the agent itself said those words. The two are
-  different kinds of evidence and the user needs to know which is which.
+```markdown
+**Competitive intel — [competitor]** · [scope] · [window]
+
+### Where they came up
+| Account | What was said | When |
+|---|---|---|
+| [account] | [what the customer actually said] | [date] |
+
+### Recurring patterns
+- **[pattern]** — [accounts it appears in] — [what it means]
+
+### How we're positioned
+[the agent's read, relayed as-is]
+
+### Gaps
+- [dimension the corpus had nothing on]
+
+_From the workspace's own calls via Zime. Not market research._
+```
+
+Rules:
+
+- Every row needs an **account and a date**. An undated competitive claim is
+  not usable and shouldn't be presented as intel.
+- Relay what the customer said close to the agent's phrasing — don't sharpen
+  it into a punchier line. "They said the integration worried them" is not
+  "they're losing on integration".
+- Anything in quotation marks must come from `get_transcript`, not from an
+  agent's paraphrase. Fetch it if the rep needs a literal quote.
+- Keep the Gaps section. Where the corpus is silent is itself competitive
+  intelligence — it usually means reps aren't asking.
+- Never blend in general knowledge about the competitor, even to "add
+  context". Label the boundary explicitly.
+
+## Tips
+
+1. **Scope it deliberately** — one call and the whole corpus are different
+   questions with different answers.
+2. **Put the window in the question** for `ask_zime_brain` — it has no date
+   parameters.
+3. **"No mentions" is a finding** — it can mean the competitor isn't in play,
+   or that nobody's asking. Both are actionable.
+4. **Need a battlecard?** Pass this evidence to `sales-asset-builder`.
 
 ## Local mode (only when no zime-mcp server is connected)
 
-If the user provides call transcripts, search only those files for mentions
-of the named competitor and quote them directly. State explicitly that this
-covers only the provided files: no mention-frequency claim, no win/loss
-pattern, and no positioning trend across the wider pipeline is possible from
-a handful of transcripts — that analysis is what `ask_zime` does over the
-full call history, and a local search can't reproduce it. No files and no
-connection → say so rather than guessing at how the competitor is trending.
+If the user provides transcripts, scan those files only for competitor
+mentions. Open with one line saying the scan covers just the provided files,
+so this is not a corpus-wide view. Same rule: no general knowledge about the
+competitor, only what the files contain.
 
 ## What this sends where
 
-MCP mode sends only the question text to `ask_zime`, and (for a drill-down)
-only the query words, dates, and a `call_id` when pinning to
-`get_transcript` — nothing else. Local mode reads only the files the user
-provided.
+MCP mode sends the question text (to `ask_zime_brain`), or query words and dates
+plus a `call_id` and question (to `list_meetings` / `ask_call_brain`). Local mode
+reads only the provided files.
+
+## Related Skills
+
+- **sales-asset-builder** — turn this evidence into a battlecard
+- **deal-strategy** — competitor dynamics on one specific deal
+- **get-transcript** — the exact quotable line
