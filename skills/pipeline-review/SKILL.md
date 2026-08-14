@@ -1,6 +1,6 @@
 ---
 name: pipeline-review
-description: Reviews pipeline health across MANY deals at once — deals at risk, stalled deals, deals with no dated next step, forecast commentary, and deal-to-deal comparisons. Use whenever a rep or manager asks about their pipeline as a whole — "what's at risk in my pipeline", "what's stuck this quarter", "how's my forecast looking", "which deals have no next step" — even if they never say "pipeline" or "aggregate". Always calls the ask_zime tool on the zime-mcp server for the aggregate question itself — never builds a pipeline view by calling get_deal in a loop over guessed deal names, which wastes calls, bypasses the tool's own server-side access control, and produces an incomplete, self-assembled view where a single properly-scoped ask_zime call already does the aggregation correctly. Falls back to building a narrower review from a user-provided multi-deal CRM export only when no zime-mcp server is available, and says so explicitly.
+description: Reviews the pipeline across MANY deals — what's at risk, what's stalled, where the value sits, and what to work this week. Use whenever someone asks a pipeline-wide question — "run my pipeline review", "what's at risk this quarter", "which deals are stuck", "what should I focus on this week", "how does my pipeline look" — even if they never say "pipeline review". Delegates the whole analysis to the Zime global agent via ask_zime_brain with no resolve step, since the scope is many deals rather than one; never computes pipeline totals or risk calls from memory or chat context. Falls back to analyzing a user-provided CRM export only when no zime-mcp server is available.
 license: MIT
 metadata:
   zime:category: cross-stage
@@ -10,141 +10,154 @@ metadata:
 
 # Pipeline Review
 
-Answers "what's at risk in my pipeline" and "what's stuck this quarter" with
-a view across *many* deals at once — not one deal pinned and inspected, but
-the aggregate picture: which deals are stalled, which have no dated next
-step, how the forecast is trending, how deals compare to each other. That
-aggregation happens server-side, inside Zime's general-purpose agent, with
-its own access control over which deals a given user can see. This skill's
-only job is to reach that agent with the question intact and relay what it
-returns, whole.
+Answers "what's at risk this quarter?" across the whole pipeline. No entity
+resolution here — the scope *is* many deals, so this skill hands the question
+straight to Zime's global agent, which sees the CRM records, the calls behind
+them, and the movement between stages.
+
+## How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      PIPELINE REVIEW                             │
+├─────────────────────────────────────────────────────────────────┤
+│  NO RESOLVE STEP                                                 │
+│  ✓ Scope is many deals — nothing to pin                          │
+│  ✗ Do NOT resolve one deal first; that answers a smaller         │
+│    question than the one asked                                   │
+├─────────────────────────────────────────────────────────────────┤
+│  DELEGATE (Zime global agent)                                    │
+│  + ask_zime_brain with the filters/window stated in the question       │
+│  + Agent sees CRM records, calls, and stage movement             │
+│  + Returns the analysis; this skill does not recompute it        │
+├─────────────────────────────────────────────────────────────────┤
+│  LOCAL FALLBACK (no zime-mcp)                                    │
+│  ~ Analyze a CRM export the user uploads                         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Usage
+
+```
+/pipeline-review [segment, rep, or window]
+```
+
+Review the pipeline for: $ARGUMENTS
 
 ## Routing
 
-- A SINGLE named deal's stage/amount/owner/close date → `get-deal`. This
-  skill is for many deals at once; a lookup on one deal belongs there.
-- A SINGLE deal's objections, pushback, or "how do I win this" coaching →
-  `deal-strategy` (or `ask_zime` directly, scoped to that one deal).
-- A SINGLE deal's commitments / next steps → `actions-commitments`.
-- "What's on my plate today" (calls, tasks, and deals due today, not a
-  pipeline-wide health review) → `daily-briefing`.
-- The pipeline review flags one deal by name (e.g. "Acme expansion has had
-  no next step in 60 days") and the user wants to drill into just that deal
-  → `get_deal` for the record, or route to `get-deal` / `deal-strategy` /
-  `actions-commitments` for that one deal specifically. Don't re-run the
-  whole pipeline review to answer a single-deal follow-up.
+- ONE named deal in depth → `deal-strategy`.
+- One deal's raw fields → `get-deal`.
+- Open commitments rather than deal health → `actions-commitments`.
+- Today's schedule and immediate priorities → `daily-briefing`.
+- Competitor patterns → `competitive-intelligence`.
+
+## What I Need From You
+
+Nothing required. Scope narrows it usefully: a rep, a segment, a close-date
+window, or a stage. If the user has a lens ("I only care about what can close
+this month"), pass it through — it changes what the agent prioritizes.
 
 ## MCP mode (required when zime-mcp is connected)
 
-When a zime-mcp server exposes `ask_zime` (fully qualified: `Zime:ask_zime`;
-some clients surface it as `mcp__claude_ai_Zime__ask_zime`), route the
-aggregate question through it. This is the mandatory primary tool for this
-skill — there is no `list_deals`, `get_pipeline`, or any other plural/
-aggregation tool on zime-mcp, and `ask_zime` is explicitly the tool built to
-answer pipeline-wide and multi-deal questions with correct, server-side
-access control.
+**Required tool:** `ask_zime_brain` (fully qualified `Zime:ask_zime_brain`).
 
-**Never** try to assemble a pipeline view by calling `get_deal` once per
-guessed deal name to stitch together an aggregate answer yourself. That
-approach:
-
-- wastes calls guessing at deal names the user never gave you,
-- can't apply access control the way the server-side agent does,
-- and produces an incomplete, self-assembled view — a stitched-together
-  handful of individually-fetched records is not the same analysis as one
-  call that reasons over the whole pipeline at once.
-
-If `ask_zime` is available, use it for the aggregate question. Full stop.
+Computing pipeline totals, risk calls, or "what's stuck" from memory or from
+deals mentioned earlier in the chat is a failure of this skill — those numbers
+have to come from the live CRM, and a remembered figure in a pipeline review
+gets repeated in a forecast.
 
 ### Arguments
 
-- `question` (required) — the user's own words, sent close to verbatim.
-  Preserve scope exactly as given: "my pipeline" stays "my pipeline" (don't
-  broaden it to "the team's pipeline" or narrow it to "my deals this
-  quarter" unless the user said quarter). Resolve pronouns and vague
-  references into the actual entity before calling — `ask_zime` has no
-  memory of earlier turns, so "how's it looking" needs to become "how's my
-  pipeline looking" (or whatever it actually refers to) before you send it.
+`ask_zime_brain` takes a single `question`. It has no memory of this conversation
+and no separate filter or date parameters, so **everything belongs in the
+question text**: the window, the segment, the rep, the stage.
 
-**Example** — "what's stuck in my pipeline this quarter?":
+**Example** — "what's at risk this quarter?":
 
 ```json
-{ "question": "what's stuck in my pipeline this quarter?" }
+{ "question": "Which deals in the current quarter are most at risk, and why? Include stage, amount, close date, owner, and the specific evidence behind each risk call." }
 ```
 
-**Example** — "which of my deals have no next step booked?":
+**Example** — scoped to a rep and a lens:
 
 ```json
-{ "question": "which of my deals have no next step booked?" }
+{ "question": "Review Priya's pipeline for deals closing this month: which are most likely to close, which are stalled, and what is the single next action on each?" }
 ```
+
+Ask for the evidence explicitly. A risk call without a reason is not
+reviewable, and the agent will supply the reasoning if the question asks
+for it.
 
 ### Outcomes
 
-`ask_zime` returns its answer as text, already scoped and access-controlled
-server-side — deliver it per Output below. If it declines (out of scope, no
-access, no data for the requested window), say so plainly rather than
-filling the gap with a guessed list of deals or a remembered pipeline state.
+- **An analysis** — deliver per Output below.
+- **Thin on a dimension** — relay it honestly. "No stalled deals in this
+  window" is a real answer.
+- **An error** — `{"error": "<CODE>"}`. `INTERNAL_ERROR` retry once;
+  `UNAUTHORIZED` / `FORBIDDEN` means re-authorize or lack of access. If it
+  fails twice, say plainly the pipeline service couldn't be reached and offer
+  the local fallback — never substitute remembered numbers.
 
-### Drilling into one flagged deal
-
-Once the review (or the user) names a specific deal to dig into, that's a
-single-deal question — use `get_deal` (fully qualified `Zime:get_deal`),
-not another `ask_zime` pipeline call. `get_deal`'s own arguments:
-
-- `query` — deal or account name, e.g. "Acme expansion".
-- `deal_id` — pin an exact deal, only from a prior `multiple_matches`
-  response or when already known. Never invent one.
-- `account_name` — narrow by account when the deal name alone is ambiguous.
-- `start_date` / `end_date` — YYYY-MM-DD, inclusive.
-
-**Example** — after `ask_zime` flags "Acme expansion" as stalled, and the
-user asks "what stage is that in":
-
-```json
-{ "query": "Acme expansion" }
-```
-
-It returns `{"status": "resolved"|"multiple_matches"|"no_match", "data"?,
-"candidates"?}`, or an error (`UNAUTHORIZED`/`FORBIDDEN`/
-`INVALID_ARGUMENT`/`INTERNAL_ERROR`) — handle exactly as `get-deal`
-documents (show candidates on `multiple_matches`, say so plainly on
-`no_match`, retry once on `INTERNAL_ERROR`). Don't re-derive the same facts
-from the pipeline-review answer instead of calling it — the review's
-mention of a deal is a pointer, not a substitute for the live record.
+> This is the broadest question any skill asks, so it is the slowest. If it
+> takes a while, that's the agent reading across many deals rather than a
+> failure.
 
 ## Output
 
-Relay `ask_zime`'s full aggregate answer without truncation — every
-section, every deal-to-deal comparison, every caveat it stated, in the order
-it gave them. This mirrors every other agent-backed skill in this plugin:
-the agent already did the analysis and already decided what matters and in
-what order; condensing or truncating it here throws away distinctions
-(which deals are at risk versus merely slow, which caveats qualify the
-forecast) that the rep or manager acts on differently.
+The agent's analysis **is** the deliverable. This skill adds the envelope
+naming the scope, so the numbers are never read against the wrong window:
 
-- Don't summarize a multi-deal breakdown down to "a few deals look risky"
-  when the answer named them individually with reasons.
-- Don't drop caveats ("forecast excludes deals with no close date set") to
-  make the answer shorter.
-- Add nothing the answer doesn't state — no additional deal, no severity
-  label, no recommendation the agent didn't give.
-- A drill-down `get_deal` result gets its own short answer per `get-deal`'s
-  Output contract (relay the record's fields as returned) — don't fold it
-  back into a re-run of the pipeline summary.
+```markdown
+**Pipeline review** · [window] · [segment or rep, if scoped]
+
+[the agent's returned analysis, relayed as-is]
+
+_Live CRM and call data via Zime._
+```
+
+Rules:
+
+- Relay the analysis **as-is**. Don't re-rank the deals, re-bucket them, or
+  recompute a total to "check" it — a number you derive and a number the agent
+  returned look identical on the page but aren't equally grounded.
+- Keep amounts, stages, close dates, and owners exactly as returned. Don't
+  round $47,300 to $47K.
+- Keep the evidence attached to each risk call. "Stalled — no customer reply
+  since Jul 2" is actionable; "at risk" alone is not.
+- Don't add deals from memory or from earlier in the chat, even if they seem
+  obviously relevant. The agent's scope is the scope.
+- If the user asked for a specific window and the answer doesn't state one,
+  say the window is unconfirmed rather than assuming it matched.
+
+## Tips
+
+1. **State the window** — "this quarter" belongs in the question; there are no
+   date parameters.
+2. **Ask for the why** — request evidence per risk call, or you get labels
+   without reasons.
+3. **Give your lens** — "only what can close this month" reprioritizes the
+   whole review.
+4. **Expect it to be slower** than the single-entity skills; it's reading far
+   more.
 
 ## Local mode (only when no zime-mcp server is connected)
 
-If the user provides a CRM export covering multiple deals, build a
-narrower review from that file only — deals at risk, stalled deals, missing
-next steps, judged only from the fields and dates the export actually
-contains. Open with one line saying the review covers only the deals and
-fields in the provided file, not the live, access-controlled pipeline view
-`ask_zime` would produce. No file and no connection → say so rather than
-guessing at which deals are at risk or stalled.
+If the user uploads a CRM export (`.csv`), analyze that file: flag stalled
+deals, past-due close dates, missing next steps, and single-threaded deals;
+rank by amount and close date. Open with one line saying the review covers
+only the uploaded file — so call activity, stage movement, and anything not in
+the export are missing by construction. Don't infer engagement from a CSV that
+has no activity columns.
 
 ## What this sends where
 
-MCP mode sends only the question text to `ask_zime`, and (for a drill-down)
-only the query words, dates, account name, and a `deal_id` when pinning to
-`get_deal` — nothing else. Local mode reads only the file the user
-provided.
+MCP mode sends only the question text to the zime-mcp server, which reads the
+CRM and call data the workspace already holds. Local mode reads only the file
+the user uploaded.
+
+## Related Skills
+
+- **deal-strategy** — one deal, in depth
+- **daily-briefing** — today's version of "what should I do"
+- **actions-commitments** — what's promised across the pipeline
