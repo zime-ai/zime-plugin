@@ -1,8 +1,8 @@
 {
-  "description": "Tier 1 trigger evals — does the right skill fire for a given prompt? These skills are typically installed alongside the open zime-gtm-skills set, so the collision risk runs both ways: e.g. call-prep must fire on pre-call prep intents, and must NOT fire on post-call review intents that belong to the open repo's audit skills (should_trigger: null means no skill in THIS repo should fire). Run via skill-creator's scripts/run_eval.py.",
+  "description": "Tier 1 trigger evals \u2014 does the right skill fire for a given prompt? These skills are typically installed alongside the open zime-gtm-skills set, so the collision risk runs both ways: e.g. call-prep must fire on pre-call prep intents, and must NOT fire on post-call review intents that belong to the open repo's audit skills (should_trigger: null means no skill in THIS repo should fire). Run via skill-creator's scripts/run_eval.py.",
   "cases": [
     {
-      "prompt": "I have a call with Northwind in an hour — get me up to speed.",
+      "prompt": "I have a call with Northwind in an hour \u2014 get me up to speed.",
       "should_trigger": "call-prep"
     },
     {
@@ -10,11 +10,11 @@
       "should_trigger": "call-prep"
     },
     {
-      "prompt": "Here's the calendar invite for Friday's QBR — what do I need to know walking in?",
+      "prompt": "Here's the calendar invite for Friday's QBR \u2014 what do I need to know walking in?",
       "should_trigger": "call-prep"
     },
     {
-      "prompt": "I'm joining this deal mid-stream as the SE — brief me before the technical call next week.",
+      "prompt": "I'm joining this deal mid-stream as the SE \u2014 brief me before the technical call next week.",
       "should_trigger": "call-prep"
     },
     {
@@ -26,7 +26,7 @@
       "should_trigger": "call-recap"
     },
     {
-      "prompt": "I missed the Northwind demo — catch me up on what happened on that call.",
+      "prompt": "I missed the Northwind demo \u2014 catch me up on what happened on that call.",
       "should_trigger": "call-recap"
     },
     {
@@ -38,7 +38,7 @@
       "should_trigger": "deal-strategy"
     },
     {
-      "prompt": "How do I win the Northwind deal — what should the rep do differently?",
+      "prompt": "How do I win the Northwind deal \u2014 what should the rep do differently?",
       "should_trigger": "deal-strategy"
     },
     {
@@ -71,7 +71,8 @@
     },
     {
       "prompt": "What did we email Acme last week about pricing?",
-      "should_trigger": "get-email"
+      "should_trigger": null,
+      "note": "Email lookup is not supported: no email tool ships in this plugin. Must not fire another skill."
     },
     {
       "prompt": "Get me up to speed on the Acme account before the QBR.",

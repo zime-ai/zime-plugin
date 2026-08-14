@@ -49,7 +49,6 @@ Draft the follow-up for: $ARGUMENTS
 - A structured internal summary rather than a customer email → `call-recap`.
 - Just the open items and owners → `actions-commitments`.
 - Prep for the NEXT call → `call-prep`.
-- Reading past correspondence rather than writing → `get-email`.
 
 ## What I Need From You
 
@@ -179,4 +178,3 @@ provided file. Neither mode sends email.
 
 - **call-recap** — the internal summary version
 - **actions-commitments** — what's still open across calls
-- **get-email** — what's already been said over email
