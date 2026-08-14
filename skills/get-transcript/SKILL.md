@@ -142,4 +142,4 @@ MCP mode sends only the query words, date range, and (when pinning) a
 
 - **get-meeting** — identify which call first
 - **call-recap** — a structured summary instead of raw text
-- **sales-asset-builder** — turn an exact quote into collateral
+- **create-sales-asset** — turn an exact quote into collateral

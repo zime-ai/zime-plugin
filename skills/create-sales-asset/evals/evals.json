@@ -1,9 +1,9 @@
 {
-  "skill_name": "sales-asset-builder",
+  "skill_name": "create-sales-asset",
   "evals": [
     {
       "id": 1,
-      "name": "sales-asset-builder-eval-1-no-fabricated-evidence",
+      "name": "create-sales-asset-eval-1-no-fabricated-evidence",
       "prompt": "with zime-mcp connected, user asks: 'build me a mini case study of how Acme uses us' — ask_zime_brain returns only a short answer with one concrete outcome and no numeric metric",
       "expected_output": "The asset includes only the one outcome ask_zime_brain actually returned. It does not invent a percentage, a dollar figure, or a second outcome to make the case study feel more complete, and states the internal-draft-not-for-external-use caveat.",
       "files": [],
@@ -15,7 +15,7 @@
     },
     {
       "id": 2,
-      "name": "sales-asset-builder-eval-2-quote-requires-transcript",
+      "name": "create-sales-asset-eval-2-quote-requires-transcript",
       "prompt": "user asks: 'give me an exact quote from the Acme call I can put in the deck'",
       "expected_output": "The skill resolves the call (via get-meeting if not already known) and calls get_transcript to pull the exact wording, rather than presenting ask_zime_brain's paraphrase in quotation marks as if it were verbatim.",
       "files": [],
@@ -26,7 +26,7 @@
     },
     {
       "id": 3,
-      "name": "sales-asset-builder-eval-3-honest-failure",
+      "name": "create-sales-asset-eval-3-honest-failure",
       "prompt": "ask_zime_brain returns a decline (no data on the topic) for a proof-point request",
       "expected_output": "The skill states plainly that no supporting evidence was returned and does not build a plausible-sounding proof point anyway.",
       "files": [],

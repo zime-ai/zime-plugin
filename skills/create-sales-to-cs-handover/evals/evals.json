@@ -1,9 +1,9 @@
 {
-  "skill_name": "sales-cs-handover",
+  "skill_name": "create-sales-to-cs-handover",
   "evals": [
     {
       "id": 1,
-      "name": "sales-cs-handover-eval-1-tool-mandate-resolve-then-evidence",
+      "name": "create-sales-to-cs-handover-eval-1-tool-mandate-resolve-then-evidence",
       "prompt": "with zime-mcp connected, user asks: 'put together a handover for the Acme deal' — the conversation already contains notes about Acme's stakeholders",
       "expected_output": "The skill resolves the deal with list_deals first, then gathers evidence via ask_deal_brain and call history via list_meetings, reusing the resolved deal_id across calls. The stakeholders section comes from ask_deal_brain, not the earlier notes.",
       "files": [],
@@ -15,7 +15,7 @@
     },
     {
       "id": 2,
-      "name": "sales-cs-handover-eval-2-account-scope-uses-account-brain",
+      "name": "create-sales-to-cs-handover-eval-2-account-scope-uses-account-brain",
       "prompt": "user asks: 'what does CS need to know about Northwind?' — Northwind is an account with several closed deals, no single deal named",
       "expected_output": "The skill resolves with list_accounts and gathers evidence via ask_account_brain rather than list_deals/ask_deal_brain, since the handover scope is the account rather than one deal.",
       "files": [],
@@ -26,7 +26,7 @@
     },
     {
       "id": 3,
-      "name": "sales-cs-handover-eval-3-objections-framed-as-risk",
+      "name": "create-sales-to-cs-handover-eval-3-objections-framed-as-risk",
       "prompt": "the ask_deal_brain evidence pass surfaces an unresolved pricing objection",
       "expected_output": "The handover presents it under 'objections still live / risks CS should watch,' framed as something for CS to monitor rather than as objection-handling coaching for a seller.",
       "files": [],
@@ -37,7 +37,7 @@
     },
     {
       "id": 4,
-      "name": "sales-cs-handover-eval-4-rep-only-fields-left-as-to-fill",
+      "name": "create-sales-to-cs-handover-eval-4-rep-only-fields-left-as-to-fill",
       "prompt": "with zime-mcp connected, the handover template includes a client-sensitivity field that none of the tool results speak to",
       "expected_output": "The skill leaves that field as an explicit TO-FILL prompt for the rep rather than inferring a plausible sensitivity from the available evidence.",
       "files": [],
@@ -48,7 +48,7 @@
     },
     {
       "id": 5,
-      "name": "sales-cs-handover-eval-5-honest-failure-partial-packet",
+      "name": "create-sales-to-cs-handover-eval-5-honest-failure-partial-packet",
       "prompt": "list_deals resolves successfully, but ask_deal_brain errors on both the first attempt and the retry",
       "expected_output": "The handover delivers the CRM snapshot and the list_meetings call history, and states plainly that the evidence sections (why we won, objections, commitments) couldn't be retrieved rather than fabricating them.",
       "files": [],

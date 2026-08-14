@@ -1,5 +1,5 @@
 ---
-name: sales-cs-handover
+name: create-sales-to-cs-handover
 description: Fills the Sales-to-CS handover document for one deal or account — stakeholders and motivations, why we won, objections still live, commitments made, call history, and marching orders for CS. Use whenever someone is handing an account over — "build the CS handover for Acme", "prep the handover doc for Northwind", "what does CS need to know about Concerto" — even if they never say "handover". Resolves the deal or account with list_deals / list_accounts, gathers evidence via ask_deal_brain / ask_account_brain and list_meetings, then fills the template; fields only the rep knows are left as explicit TO-FILL prompts rather than guessed, because an invented client sensitivity is worse than a blank one. Falls back to a narrower draft from user-provided files only when no zime-mcp server is available.
 license: MIT
 metadata:
@@ -55,7 +55,7 @@ exists to provide.
 ## Usage
 
 ```
-/sales-cs-handover <deal or account name>
+/create-sales-to-cs-handover <deal or account name>
 ```
 
 Build the handover for: $ARGUMENTS
@@ -64,7 +64,7 @@ Build the handover for: $ARGUMENTS
 
 - Deal strategy while still selling → `deal-strategy`.
 - Just the open commitments → `actions-commitments`.
-- An account review deck for a QBR → `sales-asset-builder`.
+- An account review deck for a QBR → `create-sales-asset`.
 - The account's CRM record alone → `get-account`.
 
 ## What I Need From You
@@ -214,4 +214,4 @@ evidence question (to `ask_deal_brain`/`ask_account_brain`), and query words plu
 
 - **actions-commitments** — close the gaps before handing over
 - **deal-strategy** — the pre-handover view of the same deal
-- **sales-asset-builder** — the account review deck CS will run later
+- **create-sales-asset** — the account review deck CS will run later
