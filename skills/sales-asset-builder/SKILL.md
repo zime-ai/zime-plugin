@@ -1,146 +1,216 @@
 ---
 name: sales-asset-builder
-description: Builds rep-facing sales collateral for one deal — ROI proof points, a case-study-style writeup of how a named customer uses the product, a battlecard section against a competitor, or talking points for an objection — assembled only from facts a tool returned this conversation. Use whenever someone wants a draft asset built from real customer evidence — "build me a proof point for the Acme deal", "give me a mini case study of how Northwind uses us", "put together a battlecard section against Competitor X", "give me talking points for the security objection" — even if they never say "asset". Always calls ask_zime (plus get_transcript for an exact quote, get_account/get_deal for hard facts) on zime-mcp when connected — never hand-builds a stat, quote, or outcome from memory — and every claim must trace to a tool result from this conversation. Falls back to a narrower asset from user-provided transcripts or a CRM export only when no zime-mcp server is available.
+description: Builds a sales asset in the house format — an account review deck, a proof-point one-pager, a battlecard section, a case-study writeup, or objection talking points — assembled only from facts a tool returned this conversation. Use whenever someone wants collateral built from real customer evidence — "build me an account review for Acme", "make a proof point for the Northwind deal", "put together a battlecard against Concerto", "give me talking points for the security objection" — even if they never say "asset". Resolves the subject with list_accounts or list_deals, gathers dated evidence via ask_deal_brain / ask_account_brain / ask_zime_brain, and pulls exact quotes with get_transcript; never originates a metric, quote, or customer outcome. Always an internal draft, never customer-ready collateral. Falls back to a narrower asset from user-provided files only when no zime-mcp server is available.
 license: MIT
 metadata:
   zime:category: cross-stage
   zime:dimension: initiative
-  zime:input-modes: mcp,csv,transcript
+  zime:input-modes: mcp,transcript,csv
 ---
 
 # Sales Asset Builder
 
-Turns "build me a proof point for the Acme deal" or "give me talking points
-for the security objection" into a rep-usable draft — arranged and framed by
-this skill, but every fact in it comes from a tool call in this
-conversation. This skill never originates a metric, a quote, or a "customer
-said" line; it only assembles what the tools actually returned.
+Turns "build me an account review for Acme" into a draft in our house format.
+This skill owns the **structure and framing**; the agents own the **facts**. It
+never originates a metric, a quote, or a "customer said" line.
 
 ## The hard rule
 
-Every factual claim in the built asset — a metric, a quoted line, a stated
-customer outcome, a competitive win — must trace to something a tool
-returned in THIS conversation. If a needed fact wasn't returned by a tool,
-the asset says the gap is open rather than filling it with a plausible
-number or a paraphrased "customers typically say" line. This is the one rule
-this skill cannot bend: arranging and framing real tool output is the job;
-inventing supporting evidence is a failure of it, even when the invented
-line looks exactly like something a customer would say.
+Every factual claim in the asset — a metric, a quoted line, a stated customer
+outcome, a competitive win — must trace to something a tool returned in **this
+conversation**, with the account and date attached. If a needed fact wasn't
+returned, the asset marks the gap open rather than filling it with a plausible
+number or a paraphrased "customers typically say" line.
+
+This is the one rule the skill cannot bend. Arranging real tool output is the
+job; inventing supporting evidence is a failure of it — even when the invented
+line looks exactly like something a customer would say. An asset is the
+artifact most likely to be pasted into a customer-facing deck, which is
+precisely why fabrication here is the most expensive.
+
+## How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                   SALES ASSET BUILDER                            │
+├─────────────────────────────────────────────────────────────────┤
+│  STEP 1 — RESOLVE THE SUBJECT                                    │
+│  ✓ list_accounts (account asset) or list_deals (deal asset)      │
+├─────────────────────────────────────────────────────────────────┤
+│  STEP 2 — GATHER DATED EVIDENCE                                  │
+│  + ask_account_brain / ask_deal_brain — signals, risks, expansion, outcomes  │
+│  + ask_zime_brain — cross-account patterns, competitive positioning    │
+│  + get_transcript — the exact line, when a real quote is needed  │
+├─────────────────────────────────────────────────────────────────┤
+│  STEP 3 — ASSEMBLE (Claude, house format)                        │
+│  ✓ references/deck-grammar.md — the section order we use         │
+│  ✓ Every row carries evidence + date + account                   │
+├─────────────────────────────────────────────────────────────────┤
+│  ALWAYS                                                          │
+│  ! Internal draft. Needs review before it leaves the building.   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Usage
+
+```
+/sales-asset-builder <asset type> for <account, deal, or competitor>
+```
+
+Build: $ARGUMENTS
 
 ## Routing
 
-- A plain pipeline stat with no asset to build ("what's our win rate this
-  quarter") → `pipeline-review`.
-- Objections, risk, or strategy for ONE specific deal, with no asset to
-  build → `deal-strategy`.
-- A straight recap of one call, or the follow-up email after it, not an
-  asset for reuse → `call-recap` / `follow-up`.
-- A single exact quote once the call is already identified → call
-  `get_transcript` directly (or `get-meeting` first if the call isn't known
-  yet); see MCP mode below.
-- One CRM fact alone (industry, deal size, close date) with no asset
-  requested → `get-account` / `get-deal`.
+- A pipeline stat with no asset to build → `pipeline-review`.
+- Risk or strategy on one deal, no asset → `deal-strategy`.
+- A recap of one call, or the email after it → `call-recap` / `follow-up`.
+- Competitive evidence gathering with no asset yet →
+  `competitive-intelligence` (then come back here to shape it).
+- One CRM fact alone → `get-account` / `get-deal`.
+- Researching a **prospect** we haven't sold to → `account-research`.
+
+## What I Need From You
+
+**Which asset**, and **what it's about**:
+
+| Asset | Subject | Typically needs |
+|---|---|---|
+| Account review deck | one account | signals, risks, expansion, open items |
+| Proof-point one-pager | one account/deal | outcomes with numbers, a real quote |
+| Battlecard section | a competitor | how we position, objections, wins |
+| Case-study writeup | one customer | before/after, outcomes, a quote |
+| Objection talking points | an objection theme | how it was handled successfully |
+
+If the user names an audience ("for the CS team", "for the QBR"), keep it —
+it changes emphasis, not evidence.
 
 ## MCP mode (required when zime-mcp is connected)
 
-Hand-building a proof point, case-study line, or battlecard claim from
-memory or general product knowledge while these tools are available is a
-failure of this skill — only the tools see the workspace's real calls, CRM
-records, and extracted signals.
+**Required tools:** `list_accounts` / `list_deals` (resolve), `ask_account_brain` /
+`ask_deal_brain` / `ask_zime_brain` (evidence), `get_transcript` (exact quotes).
 
-### ask_zime — primary tool for synthesis
+> `ask_account_brain` and `ask_deal_brain` are the entity-scoped agent tools — an id plus a
+> question. Hand-building a proof point from general product knowledge while
+> these are available is a failure of this skill: only the agents see the
+> workspace's real calls, CRM records, and extracted signals.
 
-When a zime-mcp server exposes `ask_zime` (fully qualified: `Zime:ask_zime`;
-some clients surface it as `mcp__claude_ai_Zime__ask_zime`), use it for any
-cross-call or cross-deal synthesis the asset needs: outcomes a named
-customer has reported, recurring proof points, how the team positions
-against a named competitor in won deals, or the strength of an argument
-across many calls. Send the question close to verbatim, with pronouns
-resolved to the actual account, deal, or competitor name — `ask_zime` has no
-memory of earlier turns in this conversation.
-
-**Example** — "what outcomes has Acme reported since going live?":
-
-```json
-{ "question": "What outcomes has Acme reported since going live?" }
-```
-
-**Example** — "how do we position against Concerto's competitor in deals we've won?":
-
-```json
-{ "question": "How are we positioning against Northwind in deals we've won?" }
-```
-
-`ask_zime` enforces access control server-side and answers in prose; there
-is no separate candidate/pin flow to manage. If it declines or has nothing
-on the topic, say so plainly and build the asset only from what it did
-return — don't fill the gap yourself.
-
-### get_transcript — for one exact, citable quote
-
-Once a specific call is identified (already known, or resolved first via
-`get-meeting`/`get_call`), call `get_transcript` to pull an exact line
-verbatim instead of quoting `ask_zime`'s paraphrase. Use this whenever the
-asset needs something the rep can literally put in quotation marks.
-
-```json
-{ "query": "Acme renewal", "start_date": "2026-05-01", "end_date": "2026-05-31" }
-```
-
-Same three-shape contract as `get-meeting`/`get-transcript`'s own skill:
-`{"status": "resolved", "data": {...}}` with the transcript, or
-`multiple_matches`/`no_match` with up to 5 `candidates` — show them and
-re-call with the chosen `call_id`, never guess. Errors arrive as
-`{"error": "<CODE>"}`; `UNAUTHORIZED`/`FORBIDDEN` mean re-authorize or lack
-of access, `INTERNAL_ERROR` is usually transient (retry once).
-
-### get_account / get_deal — for hard grounding facts
-
-When the asset needs a hard fact (industry, deal size, close date) rather
-than a synthesized claim, call `get_account`/`get_deal` directly.
+### Step 1 — resolve the subject
 
 ```json
 { "query": "Acme" }
 ```
 
-Same contract as their own skills (`get-account`, `get-deal`):
-`resolved`/`multiple_matches`/`no_match`, with the same error codes as
-above. Never substitute a remembered or guessed figure for one of these
-calls.
+`multiple_matches` → show candidates, ask, pin. Never guess: building an asset
+about the wrong account wastes the whole artifact.
+
+Skip this step for a competitor-only battlecard — go straight to `ask_zime_brain`.
+
+### Step 2 — gather evidence, asking for dates explicitly
+
+```json
+{ "account_id": "<account_id>", "question": "For this account: what expansion signals, churn risks, and open commitments appear in our calls? For each one give the evidence, the call date, and who said it." }
+```
+
+Cross-account or competitive:
+
+```json
+{ "question": "How do we position against Concerto in deals we have won, and what objections about them recur? Include the account and date for each example." }
+```
+
+**Always ask for the date and the speaker.** An undated claim can't go in an
+asset — see the deck grammar. If the agent returns claims without dates, ask
+once more for them rather than shipping undated rows.
+
+### Step 3 — exact quotes only via `get_transcript`
+
+If the asset needs something in quotation marks:
+
+```json
+{ "query": "Acme renewal", "start_date": "2026-06-01", "end_date": "2026-06-30" }
+```
+
+A quote in the asset must come from here. Putting an agent's paraphrase inside
+quotation marks is fabrication with extra steps.
+
+### Outcomes
+
+Each tool returns the usual shapes — `resolved` / `multiple_matches` /
+`no_match`, or `{"error": "<CODE>"}` (`INTERNAL_ERROR` retry once;
+`UNAUTHORIZED` / `FORBIDDEN` means re-authorize or lack of access). If a needed
+evidence call fails or returns nothing, the corresponding asset section says
+the gap is open. Never substitute a remembered figure.
 
 ## Output
 
-Assemble the asset from tool output only, shaped to what was asked for
-(proof points, a case-study-style writeup, a battlecard section, objection
-talking points):
+Follow [references/deck-grammar.md](references/deck-grammar.md) for section
+order and the evidence-table shape. The short version:
 
-- Every metric, quote, and outcome in the asset must be attributable to a
-  specific tool call made in this conversation — when relaying a claim from
-  `ask_zime`, keep it close to how the tool phrased it rather than
-  sharpening or rounding it into a punchier line.
-- An exact quote presented in quotation marks must have come from
-  `get_transcript`, not from paraphrasing `ask_zime`'s synthesis.
-- If a section of the requested asset has no supporting tool output, say so
-  in that section ("no proof point returned for this claim") instead of
-  omitting the gap or writing around it.
-- State plainly, every time this skill delivers an asset: **this is an
-  internal draft for the rep's own use, not customer-facing collateral
-  cleared by marketing or legal.** Calls may contain confidential customer
-  language, so anything built here needs review before it leaves the
-  building — before it goes to a prospect, gets pasted into a deck sent
-  externally, or gets published anywhere.
+```markdown
+# [Asset title] — [subject]
+_Internal draft. Assembled from Zime call and CRM data on [date]. Not reviewed
+by marketing or legal._
+
+## The problem (in their words)
+> "[verbatim quote]" — [name, title], [date]
+
+## [Evidence section — signals / risks / expansion]
+| [Account] | [Signal] | Evidence | Date | Next action |
+|---|---|---|---|---|
+| [account] | [signal] | [what was said] | [date] | [action] |
+
+## What this means
+[synthesis — clearly framing, not new facts]
+
+## Open gaps
+- [section with no supporting evidence returned]
+
+---
+_Sources: Zime call recordings — [account], [dates]._
+```
+
+### Rules
+
+- **Every row: account, evidence, date.** A row missing any of the three
+  doesn't ship — that's the format's whole discipline.
+- **Quotes come from `get_transcript`**, attributed to a named speaker with a
+  date. No exceptions.
+- **Relay claims close to the agent's phrasing.** Don't sharpen "the
+  integration worried them" into "integration is why we're losing".
+- **Never invent a number.** No ROI figure, headcount, or percentage that a
+  tool didn't return. If the asset format wants an ROI section and no numbers
+  came back, the section says so.
+- **Keep Open gaps.** Removing it makes a partial asset look complete.
+- **Always caption it as an internal draft**, every time. Calls contain
+  confidential customer language; anything built here needs review before it
+  goes to a prospect, into an external deck, or anywhere published.
+
+## Tips
+
+1. **Name the asset type** — "account review deck" and "proof point" have
+   different section orders.
+2. **Ask for dates in the evidence question** — retrofitting them later means
+   re-calling.
+3. **Fetch quotes separately** — one `get_transcript` call is what makes a
+   quote quotable.
+4. **Gaps are useful** — they tell the rep what to go ask on the next call.
 
 ## Local mode (only when no zime-mcp server is connected)
 
-If the user provides call transcripts or a CRM export, build a narrower
-asset from those files only — same rule: every claim traces to a quote or
-field in the provided files, nothing filled in from general knowledge. Open
-with one line saying the asset covers only the provided files, not the full
-account or deal history, and repeat the internal-draft caveat above.
+If the user provides transcripts or a CRM export, build a narrower asset from
+those files only — same rule: every claim traces to a line or field in the
+provided files. Open with one line saying the asset covers only those files,
+not the full account history, and repeat the internal-draft caveat.
 
 ## What this sends where
 
-MCP mode sends only the question text (to `ask_zime`), or query words,
-dates, and (when pinning) a call_id/account_id/deal_id (to `get_transcript`,
-`get_account`, `get_deal`) to the zime-mcp server. Local mode reads only the
-files the user provided.
+MCP mode sends query words (to `list_accounts`/`list_deals`), ids plus
+evidence questions (to `ask_account_brain`/`ask_deal_brain`), question text (to
+`ask_zime_brain`), and query/dates plus a `call_id` (to `get_transcript`). Local mode
+reads only the provided files.
+
+## Related Skills
+
+- **competitive-intelligence** — gather competitor evidence first
+- **deal-strategy** — the analysis behind a deal-focused asset
+- **sales-cs-handover** — the handover doc, a different house format
+- **get-transcript** — the exact quotable line

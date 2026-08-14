@@ -5,18 +5,18 @@
       "id": 1,
       "name": "sales-cs-handover-eval-1-tool-mandate-three-calls",
       "prompt": "with zime-mcp connected, user asks: 'put together a handover for the Acme deal' — the conversation already contains notes about Acme's stakeholders",
-      "expected_output": "The skill calls get_deal first, then get_deal_next_steps and ask_zime (for stakeholders and risks), reusing the resolved deal_id/account name across calls. It does not answer the stakeholders section from the earlier notes.",
+      "expected_output": "The skill calls get_deal first, then get_deal_next_steps and ask_zime_brain (for stakeholders and risks), reusing the resolved deal_id/account name across calls. It does not answer the stakeholders section from the earlier notes.",
       "files": [],
       "expectations": [
-        "get_deal is called before get_deal_next_steps and ask_zime",
+        "get_deal is called before get_deal_next_steps and ask_zime_brain",
         "The resolved deal_id or account name is reused rather than re-triggering disambiguation",
-        "Stakeholder info comes from the ask_zime call, not the earlier notes"
+        "Stakeholder info comes from the ask_zime_brain call, not the earlier notes"
       ]
     },
     {
       "id": 2,
       "name": "sales-cs-handover-eval-2-objections-framed-as-risk-not-coaching",
-      "prompt": "the ask_zime risk question surfaces an unresolved pricing objection",
+      "prompt": "the ask_zime_brain risk question surfaces an unresolved pricing objection",
       "expected_output": "The handover presents it under 'risks CS should watch,' not as objection-handling coaching, and does not call get_deal_objections for this purpose.",
       "files": [],
       "expectations": [
