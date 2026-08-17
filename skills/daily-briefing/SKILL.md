@@ -28,7 +28,7 @@ rather than the deep one.
 │  ✓ list_meetings for today's actual meetings, with times         │
 ├─────────────────────────────────────────────────────────────────┤
 │  DELEGATE (Zime instant agent)                                   │
-│  + ask_zime_brain for what changed and what needs attention            │
+│  + ask_zime for what changed and what needs attention            │
 │  + Fast tier by design — this runs before the first call         │
 ├─────────────────────────────────────────────────────────────────┤
 │  LOCAL FALLBACK (no zime-mcp)                                    │
@@ -58,7 +58,7 @@ Nothing. Default to today. Accept "this week" or a specific date if given.
 
 ## MCP mode (required when zime-mcp is connected)
 
-**Required tool:** `ask_zime_brain`. **Recommended:** `list_meetings` for the
+**Required tool:** `ask_zime`. **Recommended:** `list_meetings` for the
 schedule.
 
 Assembling the briefing from memory or from deals mentioned earlier in the
@@ -84,7 +84,7 @@ changed.
 { "question": "Brief me for today: what meetings do I have, what changed on my deals since yesterday, and what needs my attention today. Include the specific deal or account behind each item." }
 ```
 
-`ask_zime_brain` has no memory of this conversation and no date parameters — put the
+`ask_zime` has no memory of this conversation and no date parameters — put the
 day in the question text. Ask for the deal or account behind each item, or you
 get a list of alerts with nothing to act on.
 
@@ -151,7 +151,7 @@ Don't infer change from a snapshot.
 ## What this sends where
 
 MCP mode sends a date range and empty query (to `list_meetings`) and the
-question text (to `ask_zime_brain`). Local mode reads only the provided file.
+question text (to `ask_zime`). Local mode reads only the provided file.
 
 ## Related Skills
 

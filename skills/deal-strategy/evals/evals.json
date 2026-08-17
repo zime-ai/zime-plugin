@@ -5,11 +5,11 @@
       "id": 1,
       "name": "deal-strategy-eval-1-tool-mandate-resolve-then-delegate",
       "prompt": "with zime-mcp connected, user asks: 'what's holding the Acme expansion back?' — the conversation already contains a note listing two plausible blockers",
-      "expected_output": "The skill resolves the deal with list_deals, then calls ask_deal_brain with the resolved deal_id and the question, rather than answering from the conversation note or offering generic sales advice.",
+      "expected_output": "The skill resolves the deal with list_deals, then calls ask_zime naming the resolved deal and the question, rather than answering from the conversation note or offering generic sales advice.",
       "files": [],
       "expectations": [
         "list_deals is called to resolve the named deal",
-        "ask_deal_brain is called with the resolved deal_id",
+        "ask_zime is called naming the resolved deal",
         "The answer is not taken from the conversation note or generic playbook advice"
       ]
     },
@@ -17,11 +17,11 @@
       "id": 2,
       "name": "deal-strategy-eval-2-prescriptive-question-same-chain",
       "prompt": "user asks: 'how do I win the Acme expansion against Borealis?'",
-      "expected_output": "The skill uses the same list_deals → ask_deal_brain chain for the prescriptive/comparative question, passing the competitor and the intent through in the question text rather than substituting its own competitive strategy.",
+      "expected_output": "The skill uses the same list_deals → ask_zime chain for the prescriptive/comparative question, passing the competitor and the intent through in the question text rather than substituting its own competitive strategy.",
       "files": [],
       "expectations": [
-        "The same list_deals → ask_deal_brain chain is used for prescriptive questions",
-        "The competitor is named explicitly in the question sent to ask_deal_brain",
+        "The same list_deals → ask_zime chain is used for prescriptive questions",
+        "The competitor is named explicitly in the question sent to ask_zime",
         "No generic competitive strategy is substituted for the agent's grounded read"
       ]
     },
@@ -29,11 +29,11 @@
       "id": 3,
       "name": "deal-strategy-eval-3-cross-deal-routes-away",
       "prompt": "user asks: 'why are we losing to Borealis across the board?'",
-      "expected_output": "The skill recognizes this spans many deals rather than one, and routes to competitive-intelligence (or ask_zime_brain) instead of resolving a single deal with list_deals.",
+      "expected_output": "The skill recognizes this spans many deals rather than one, and routes to competitive-intelligence (or ask_zime) instead of resolving a single deal with list_deals.",
       "files": [],
       "expectations": [
         "list_deals is NOT called for a cross-deal question",
-        "The skill routes to competitive-intelligence or ask_zime_brain"
+        "The skill routes to competitive-intelligence or ask_zime"
       ]
     },
     {
@@ -45,13 +45,13 @@
       "expectations": [
         "Both candidates are shown with a question asking which one",
         "No deal_id is guessed or auto-picked",
-        "ask_deal_brain is not called until a deal_id is confirmed"
+        "ask_zime is not called until the deal is confirmed"
       ]
     },
     {
       "id": 5,
       "name": "deal-strategy-eval-5-honest-failure",
-      "prompt": "ask_deal_brain returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
+      "prompt": "ask_zime returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
       "expected_output": "After exactly one retry, the skill states plainly the deal-analysis service couldn't be reached and offers the transcript/CRM-export fallback. It does not substitute generic coaching for the agent's grounded read.",
       "files": [],
       "expectations": [

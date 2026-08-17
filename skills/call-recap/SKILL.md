@@ -26,7 +26,7 @@ what a transcript literally says.
 │  ✓ Ambiguous → show candidates, ask, pin call_id                 │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 2 — DELEGATE (Zime agent)                                  │
-│  + ask_zime_brain with the recap question, naming the call        │
+│  + ask_zime with the recap question, naming the call        │
 │  + Agent reads transcript + signals + linked deal                │
 │  + Returns the recap; this skill does not rewrite it              │
 ├─────────────────────────────────────────────────────────────────┤
@@ -59,11 +59,11 @@ nothing to work from and I'll say so.
 
 ## MCP mode (required when zime-mcp is connected)
 
-**Required tools:** `list_meetings` (resolve) and `ask_zime_brain` (delegate).
+**Required tools:** `list_meetings` (resolve) and `ask_zime` (delegate).
 
-> `ask_zime_brain` routes to Zime's global agent, with no separate `call_id`
+> `ask_zime` routes to Zime's global agent, with no separate `call_id`
 > argument — name the call (title and date) in the question text. Writing the
-> recap yourself from a fetched transcript while `ask_zime_brain` is available
+> recap yourself from a fetched transcript while `ask_zime` is available
 > is a failure of this skill: the agent also sees the call's extracted
 > signals and CRM linkage, which a raw transcript does not carry.
 
@@ -141,7 +141,7 @@ gaps rather than inferring decisions that were never stated.
 ## What this sends where
 
 MCP mode sends the query words and date range (to `list_meetings`), then the
-recap question naming the call (to `ask_zime_brain`). Local mode reads only
+recap question naming the call (to `ask_zime`). Local mode reads only
 the file the user provided.
 
 ## Related Skills

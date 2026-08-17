@@ -22,7 +22,7 @@ an agent. This one inverts that:
 - **No resolve step.** The prospect isn't in our CRM. If they were, the user
   wants `get-account`.
 - **Claude web search is the primary source**, not a fallback.
-- **`ask_zime_brain` is called once, and not about the prospect.** It's called about
+- **`ask_zime` is called once, and not about the prospect.** It's called about
   *us* — to pull our ICP definition and what our won customers look like, so
   "do they fit" is measured against something real instead of a guess.
 
@@ -33,7 +33,7 @@ an agent. This one inverts that:
 │                     ACCOUNT RESEARCH                             │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 1 — GROUND THE BASELINE (once, about US)                   │
-│  ✓ ask_zime_brain: our ICP, our won-customer patterns                  │
+│  ✓ ask_zime: our ICP, our won-customer patterns                  │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 2 — RESEARCH THE PROSPECT (web search, primary)            │
 │  ✓ What they do, size, funding, customers                        │
@@ -81,7 +81,7 @@ If the company turns out to already be in CRM, say so and offer
 
 ## MCP mode (when zime-mcp is connected)
 
-**Required tool:** `ask_zime_brain`, used once for the baseline.
+**Required tool:** `ask_zime`, used once for the baseline.
 
 ### Step 1 — pull our own ICP baseline
 
@@ -90,11 +90,11 @@ If the company turns out to already be in CRM, say so and offer
 ```
 
 Do this **first**. Without it, the fit assessment is Claude's prior about what
-a good customer looks like rather than ours. If `ask_zime_brain` returns nothing
+a good customer looks like rather than ours. If `ask_zime` returns nothing
 useful on ICP, say the fit assessment is unanchored and label the scorecard as
 provisional — don't quietly substitute a generic B2B SaaS ICP.
 
-Note: `ask_zime_brain` cannot tell you anything about the prospect. It only sees our
+Note: `ask_zime` cannot tell you anything about the prospect. It only sees our
 workspace. Asking it about a company we've never spoken to will correctly
 return nothing.
 

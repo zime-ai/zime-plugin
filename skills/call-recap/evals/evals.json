@@ -5,11 +5,11 @@
       "id": 1,
       "name": "call-recap-eval-1-tool-mandate",
       "prompt": "with zime-mcp connected, user asks: 'recap my Acme call from yesterday' — the conversation already contains detailed notes from that call that could produce a plausible summary",
-      "expected_output": "The skill resolves the meeting with list_meetings, then calls ask_call_brain with the resolved call_id and the recap question, rather than writing the recap from the conversation notes.",
+      "expected_output": "The skill resolves the meeting with list_meetings, then calls ask_zime naming the resolved call and the recap question, rather than writing the recap from the conversation notes.",
       "files": [],
       "expectations": [
         "list_meetings is called to resolve the call",
-        "ask_call_brain is called with the resolved call_id, not answered from the conversation notes",
+        "ask_zime is called naming the resolved call, not answered from the conversation notes",
         "The recap sections come from the tool result, not from the earlier notes"
       ]
     },
@@ -22,7 +22,7 @@
       "expectations": [
         "Candidates are shown with a question asking which call is meant",
         "No call_id is guessed when the request is ambiguous",
-        "ask_call_brain is not called until a call_id is confirmed"
+        "ask_zime is not called until the call is confirmed"
       ]
     },
     {
@@ -34,13 +34,13 @@
       "expectations": [
         "The absence of a recording is stated plainly",
         "No recap is produced from title/attendee metadata alone",
-        "ask_call_brain is not called for a meeting with no transcript"
+        "ask_zime is not called for a meeting with no transcript"
       ]
     },
     {
       "id": 4,
       "name": "call-recap-eval-4-honest-failure",
-      "prompt": "ask_call_brain errors with {\"error\": \"UNAUTHORIZED\"} on the recap call",
+      "prompt": "ask_zime errors with {\"error\": \"UNAUTHORIZED\"} on the recap call",
       "expected_output": "The skill states plainly that the Zime connection needs re-authorizing and offers the local transcript fallback. It does not present a hand-written recap as tool-backed.",
       "files": [],
       "expectations": [

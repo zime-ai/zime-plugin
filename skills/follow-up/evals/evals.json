@@ -5,11 +5,11 @@
       "id": 1,
       "name": "follow-up-eval-1-tool-mandate",
       "prompt": "with zime-mcp connected, user asks: 'draft the follow-up for my Acme call' — the conversation already contains notes covering what was discussed and agreed",
-      "expected_output": "The skill resolves the meeting with list_meetings, then calls ask_call_brain with the resolved call_id and the drafting question, rather than writing the email from the conversation notes.",
+      "expected_output": "The skill resolves the meeting with list_meetings, then calls ask_zime naming the resolved call and the drafting question, rather than writing the email from the conversation notes.",
       "files": [],
       "expectations": [
         "list_meetings is called to resolve the call",
-        "ask_call_brain is called with the resolved call_id, not answered from the conversation notes",
+        "ask_zime is called naming the resolved call, not answered from the conversation notes",
         "The draft's specifics come from the tool result, not from the earlier notes"
       ]
     },
@@ -29,18 +29,18 @@
       "id": 3,
       "name": "follow-up-eval-3-latest-call-picks-newest",
       "prompt": "user asks: 'draft a follow-up for my most recent call' and list_meetings returns multiple candidates newest-first",
-      "expected_output": "Because the user explicitly asked for their most recent call, the skill takes the first (newest) candidate and proceeds without asking, then calls ask_call_brain with that call_id.",
+      "expected_output": "Because the user explicitly asked for their most recent call, the skill takes the first (newest) candidate and proceeds without asking, then calls ask_zime with that call_id.",
       "files": [],
       "expectations": [
         "The newest candidate is selected without a disambiguation question",
-        "ask_call_brain is called with that call_id",
+        "ask_zime is called naming that call",
         "The selected call is named back to the user so the choice is visible"
       ]
     },
     {
       "id": 4,
       "name": "follow-up-eval-4-honest-failure",
-      "prompt": "ask_call_brain errors on both the first attempt and the retry",
+      "prompt": "ask_zime errors on both the first attempt and the retry",
       "expected_output": "After exactly one retry, the skill states plainly the drafting service couldn't be reached and offers the local transcript fallback. It does not present a hand-written email as tool-backed.",
       "files": [],
       "expectations": [

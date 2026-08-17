@@ -17,11 +17,11 @@
       "id": 2,
       "name": "get-deal-eval-2-many-deals-routes-away",
       "prompt": "user asks: 'which deals are stuck without a next step?'",
-      "expected_output": "The skill recognizes this is a many-deal aggregation question, not a single named deal, and routes to ask_zime_brain (or pipeline-review) instead of calling list_deals.",
+      "expected_output": "The skill recognizes this is a many-deal aggregation question, not a single named deal, and routes to ask_zime (or pipeline-review) instead of calling list_deals.",
       "files": [],
       "expectations": [
         "list_deals is NOT called for a many-deal question",
-        "The skill routes to ask_zime_brain or pipeline-review instead"
+        "The skill routes to ask_zime or pipeline-review instead"
       ]
     },
     {

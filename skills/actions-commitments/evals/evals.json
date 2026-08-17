@@ -5,42 +5,42 @@
       "id": 1,
       "name": "actions-commitments-eval-1-tool-mandate-single-deal",
       "prompt": "with zime-mcp connected, user asks: 'what did we commit to on the Acme expansion?' — the conversation already contains a note listing two plausible commitments",
-      "expected_output": "The skill resolves the deal with list_deals, then calls ask_deal_brain with the resolved deal_id and the commitments question, rather than answering from the conversation note. Committed, scheduled, and recommended items are kept separate.",
+      "expected_output": "The skill resolves the deal with list_deals, then calls ask_zime naming the resolved deal and the commitments question, rather than answering from the conversation note. Committed, scheduled, and recommended items are kept separate.",
       "files": [],
       "expectations": [
         "list_deals is called to resolve the named deal",
-        "ask_deal_brain is called with the resolved deal_id, not answered from the conversation note",
+        "ask_zime is called naming the resolved deal, not answered from the conversation note",
         "The committed/scheduled/recommended groupings are kept separate in the answer"
       ]
     },
     {
       "id": 2,
-      "name": "actions-commitments-eval-2-single-call-routes-to-call-brain",
+      "name": "actions-commitments-eval-2-single-call-scopes-to-that-call",
       "prompt": "user asks: 'what did we promise on the Acme call last Tuesday?'",
-      "expected_output": "The skill resolves the meeting with list_meetings (recorded: true) and calls ask_call_brain with the resolved call_id, not ask_deal_brain, since the scope is one call rather than the whole deal.",
+      "expected_output": "The skill resolves the meeting with list_meetings (recorded: true) and calls ask_zime naming the resolved call, scoping the question to that one call rather than the whole deal.",
       "files": [],
       "expectations": [
         "list_meetings is called with recorded: true to resolve the call",
-        "ask_call_brain is called with the resolved call_id",
-        "ask_deal_brain is NOT called when the scope is a single call"
+        "ask_zime is called naming the resolved call",
+        "the ask_zime question names the single call, not the whole deal"
       ]
     },
     {
       "id": 3,
       "name": "actions-commitments-eval-3-ambiguous-scope-disambiguates",
       "prompt": "with zime-mcp connected, user asks: 'what's still open on Acme?' and list_deals returns {\"status\": \"multiple_matches\", \"candidates\": [two Acme deals]}",
-      "expected_output": "The skill shows both candidates and asks which deal the user means, then re-calls with the chosen deal_id. It does not pick one itself and does not proceed to ask_deal_brain on a guess.",
+      "expected_output": "The skill shows both candidates and asks which deal the user means, then re-calls with the chosen deal_id. It does not pick one itself and does not proceed to ask_zime on a guess.",
       "files": [],
       "expectations": [
         "Both candidates are shown to the user with a question asking which one",
         "No deal_id is guessed or auto-picked",
-        "ask_deal_brain is not called until a deal_id is confirmed"
+        "ask_zime is not called until the deal is confirmed"
       ]
     },
     {
       "id": 4,
       "name": "actions-commitments-eval-4-honest-failure",
-      "prompt": "ask_deal_brain returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
+      "prompt": "ask_zime returns {\"error\": \"INTERNAL_ERROR\"} on both the first attempt and the retry",
       "expected_output": "After exactly one retry, the skill states plainly the deal-analysis service couldn't be reached and offers the transcript/CRM-export fallback. It does not substitute a from-memory commitments list.",
       "files": [],
       "expectations": [

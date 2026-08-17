@@ -33,8 +33,8 @@ cheaper."
 ├─────────────────────────────────────────────────────────────────┤
 │  SCOPE FIRST (this skill decides which)                          │
 │  ✓ "on the Acme call"    → list_meetings, then name the call in the │
-│                             ask_zime_brain question                │
-│  ✓ "across our deals"    → ask_zime_brain directly (no resolve needed)  │
+│                             ask_zime question                │
+│  ✓ "across our deals"    → ask_zime directly (no resolve needed)  │
 ├─────────────────────────────────────────────────────────────────┤
 │  DELEGATE (Zime agent)                                           │
 │  + Agent reads real calls, mentions, and extracted signals       │
@@ -73,10 +73,10 @@ differently.
 
 ## MCP mode (required when zime-mcp is connected)
 
-**Required tools:** `ask_zime_brain` (all scopes). For single-call scope also
+**Required tools:** `ask_zime` (all scopes). For single-call scope also
 `list_meetings` first, to name the exact call in the question.
 
-> `ask_zime_brain` routes to Zime's global agent across the whole accessible
+> `ask_zime` routes to Zime's global agent across the whole accessible
 > corpus, with no separate scoping argument — narrow it by naming the call,
 > account, or window inside the question text. Answering from general
 > knowledge about the competitor while it's available is a failure of this
@@ -87,9 +87,9 @@ differently.
 | Request shape | Path |
 |---|---|
 | "did Competitor X come up on the Acme call" | `list_meetings` to confirm the call, then name it in the question |
-| "where is Competitor X showing up" | `ask_zime_brain` directly |
-| "how do we position against them in deals we won" | `ask_zime_brain` directly |
-| "what did they say about them last quarter" | `ask_zime_brain` with the window in the question |
+| "where is Competitor X showing up" | `ask_zime` directly |
+| "how do we position against them in deals we won" | `ask_zime` directly |
+| "what did they say about them last quarter" | `ask_zime` with the window in the question |
 
 Don't narrow to one call when the question is corpus-wide — that would
 silently answer a much smaller question than the one asked.
@@ -101,7 +101,7 @@ silently answer a much smaller question than the one asked.
 ```
 
 Send the question close to verbatim with the competitor named explicitly and
-the time window stated in the text — `ask_zime_brain` has no memory of this
+the time window stated in the text — `ask_zime` has no memory of this
 conversation and no separate date parameters.
 
 ### Single call
@@ -172,7 +172,7 @@ Rules:
 
 1. **Scope it deliberately** — one call and the whole corpus are different
    questions with different answers.
-2. **Put the window in the question** for `ask_zime_brain` — it has no date
+2. **Put the window in the question** for `ask_zime` — it has no date
    parameters.
 3. **"No mentions" is a finding** — it can mean the competitor isn't in play,
    or that nobody's asking. Both are actionable.
@@ -188,7 +188,7 @@ competitor, only what the files contain.
 ## What this sends where
 
 MCP mode sends the question text, with any call/account/window named inside
-it (to `ask_zime_brain`), and query words plus dates when confirming a call
+it (to `ask_zime`), and query words plus dates when confirming a call
 first (to `list_meetings`). Local mode reads only the provided files.
 
 ## Related Skills
