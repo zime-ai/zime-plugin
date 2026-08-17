@@ -33,7 +33,7 @@ unknown rather than filling it with best-practice filler.
 │  ✓ Ambiguous → show candidates, ask, pin                         │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 2 — DELEGATE (Zime deal agent)                             │
-│  + ask_zime_brain, naming the deal in the question                     │
+│  + ask_zime, naming the deal in the question                     │
 │  + Agent reads all calls on the deal + signals + CRM             │
 │  + Returns the analysis; this skill does not re-reason it         │
 ├─────────────────────────────────────────────────────────────────┤
@@ -66,9 +66,9 @@ through — it focuses the agent's analysis.
 
 ## MCP mode (required when zime-mcp is connected)
 
-**Required tools:** `list_deals` (resolve) and `ask_zime_brain` (analyze).
+**Required tools:** `list_deals` (resolve) and `ask_zime` (analyze).
 
-> `ask_zime_brain` routes to Zime's agent over the whole workspace — name the
+> `ask_zime` routes to Zime's agent over the whole workspace — name the
 > deal in the question text since there's no separate `deal_id` argument.
 > Answering from general sales knowledge while it's available is a failure of
 > this skill.
@@ -154,7 +154,7 @@ filling them with standard playbook advice.
 ## What this sends where
 
 MCP mode sends the query words (to `list_deals`), then the analysis question
-naming the deal (to `ask_zime_brain`). Local mode reads only the provided files.
+naming the deal (to `ask_zime`). Local mode reads only the provided files.
 
 ## Related Skills
 

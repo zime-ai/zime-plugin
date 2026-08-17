@@ -39,7 +39,7 @@ exists to provide.
 │  ✓ list_deals (deal handover) or list_accounts (account)         │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 2 — GATHER                                                 │
-│  + ask_zime_brain — why we won, objections, commitments          │
+│  + ask_zime — why we won, objections, commitments          │
 │  + list_meetings — call history, cadence, last engagement        │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 3 — FILL, DON'T GUESS                                      │
@@ -84,7 +84,7 @@ design, not a shortfall.
 
 ## MCP mode (required when zime-mcp is connected)
 
-**Required tools:** `list_deals` / `list_accounts` (resolve), `ask_zime_brain`
+**Required tools:** `list_deals` / `list_accounts` (resolve), `ask_zime`
 (evidence), `list_meetings` (call history).
 
 ### Step 1 — resolve
@@ -98,7 +98,7 @@ wrong account is worse than none.
 
 ### Step 2 — gather, asking for dates and names
 
-Name the deal or account in the question itself, since `ask_zime_brain` has no
+Name the deal or account in the question itself, since `ask_zime` has no
 separate deal/account scoping argument:
 
 ```json
@@ -227,7 +227,7 @@ carry.
 ## What this sends where
 
 MCP mode sends query words (to `list_deals`/`list_accounts`), the evidence
-question naming the deal or account (to `ask_zime_brain`), and query words
+question naming the deal or account (to `ask_zime`), and query words
 plus dates (to `list_meetings`). If a Google Drive connector is available,
 the finished handover text is sent to it to create the doc. Local mode reads
 only the provided files.

@@ -25,7 +25,7 @@ lines and next steps are real rather than plausible.
 │  ✓ Ambiguous → show candidates, ask, pin call_id                 │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 2 — DELEGATE (Zime agent)                                  │
-│  + ask_zime_brain drafts from real commitments and next steps, naming the call │
+│  + ask_zime drafts from real commitments and next steps, naming the call │
 │  + Returns the draft; this skill formats and captions it         │
 ├─────────────────────────────────────────────────────────────────┤
 │  ALWAYS                                                          │
@@ -58,9 +58,9 @@ draft. Only recorded calls can be drafted from.
 
 ## MCP mode (required when zime-mcp is connected)
 
-**Required tools:** `list_meetings` (resolve) and `ask_zime_brain` (draft).
+**Required tools:** `list_meetings` (resolve) and `ask_zime` (draft).
 
-> `ask_zime_brain` routes to Zime's global agent, with no separate `call_id`
+> `ask_zime` routes to Zime's global agent, with no separate `call_id`
 > argument — name the call (title and date) in the question text. Writing
 > the email yourself while it's available is a failure of this skill: the
 > agent knows which commitments were actually made, and an invented promise
@@ -172,7 +172,7 @@ draft covers only the provided transcript.
 ## What this sends where
 
 MCP mode sends the query words and date range (to `list_meetings`), then the
-drafting question naming the call (to `ask_zime_brain`). Local mode reads
+drafting question naming the call (to `ask_zime`). Local mode reads
 only the provided file. Neither mode sends email.
 
 ## Related Skills

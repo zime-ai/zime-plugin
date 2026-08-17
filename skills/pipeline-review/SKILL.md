@@ -27,7 +27,7 @@ them, and the movement between stages.
 │    question than the one asked                                   │
 ├─────────────────────────────────────────────────────────────────┤
 │  DELEGATE (Zime global agent)                                    │
-│  + ask_zime_brain with the filters/window stated in the question       │
+│  + ask_zime with the filters/window stated in the question       │
 │  + Agent sees CRM records, calls, and stage movement             │
 │  + Returns the analysis; this skill does not recompute it        │
 ├─────────────────────────────────────────────────────────────────┤
@@ -60,7 +60,7 @@ this month"), pass it through — it changes what the agent prioritizes.
 
 ## MCP mode (required when zime-mcp is connected)
 
-**Required tool:** `ask_zime_brain` (fully qualified `Zime:ask_zime_brain`).
+**Required tool:** `ask_zime` (fully qualified `Zime:ask_zime`).
 
 Computing pipeline totals, risk calls, or "what's stuck" from memory or from
 deals mentioned earlier in the chat is a failure of this skill — those numbers
@@ -69,7 +69,7 @@ gets repeated in a forecast.
 
 ### Arguments
 
-`ask_zime_brain` takes a single `question`. It has no memory of this conversation
+`ask_zime` takes a single `question`. It has no memory of this conversation
 and no separate filter or date parameters, so **everything belongs in the
 question text**: the window, the segment, the rep, the stage.
 

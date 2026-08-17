@@ -5,11 +5,11 @@
       "id": 1,
       "name": "account-research-eval-1-tool-mandate-icp-baseline-first",
       "prompt": "with zime-mcp connected, user asks: 'research Northwind Logistics for me — are they a fit?' — the conversation already contains a note describing what a good customer looks like",
-      "expected_output": "The skill calls ask_zime_brain FIRST for our own ICP baseline, then runs web research on Northwind. The fit assessment is anchored to the returned ICP, not to the conversation note or a generic B2B SaaS prior.",
+      "expected_output": "The skill calls ask_zime FIRST for our own ICP baseline, then runs web research on Northwind. The fit assessment is anchored to the returned ICP, not to the conversation note or a generic B2B SaaS prior.",
       "files": [],
       "expectations": [
-        "ask_zime_brain is called before any web search, asking about OUR ICP and won-customer patterns",
-        "The ask_zime_brain question does NOT contain the prospect's name (Zime has no data on them)",
+        "ask_zime is called before any web search, asking about OUR ICP and won-customer patterns",
+        "The ask_zime question does NOT contain the prospect's name (Zime has no data on them)",
         "The fit assessment cites the returned ICP rather than the earlier conversation note"
       ]
     },
@@ -27,7 +27,7 @@
     {
       "id": 3,
       "name": "account-research-eval-3-unanchored-icp-labels-provisional",
-      "prompt": "with zime-mcp connected, ask_zime_brain returns nothing useful about our ICP; the user asked to research Northwind Logistics",
+      "prompt": "with zime-mcp connected, ask_zime returns nothing useful about our ICP; the user asked to research Northwind Logistics",
       "expected_output": "The skill still delivers the web-research brief, but states plainly the fit assessment is unanchored and labels the ICP scorecard provisional. It does not quietly substitute a generic B2B SaaS ICP.",
       "files": [],
       "expectations": [

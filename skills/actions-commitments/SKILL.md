@@ -27,7 +27,7 @@ whoever seems likely.
 │  ✓ An account  → list_deals / list_meetings for that account     │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 2 — DELEGATE (Zime agent)                                  │
-│  + ask_zime_brain, naming the call, deal, or account in the question    │
+│  + ask_zime, naming the call, deal, or account in the question    │
 │  + Agent extracts commitments, owners, dates from real calls     │
 ├─────────────────────────────────────────────────────────────────┤
 │  LOCAL FALLBACK (no zime-mcp)                                    │
@@ -59,9 +59,9 @@ rather than guessing between a call and a deal.
 ## MCP mode (required when zime-mcp is connected)
 
 **Required tools:** `list_meetings` and/or `list_deals` (resolve), plus
-`ask_zime_brain` (extract).
+`ask_zime` (extract).
 
-> `ask_zime_brain` routes to Zime's global agent, with no separate id
+> `ask_zime` routes to Zime's global agent, with no separate id
 > argument — name the call, deal, or account in the question text. Extracting
 > commitments yourself from a fetched transcript while it's available is a
 > failure of this skill: the agent also sees extracted signals and CRM
@@ -160,7 +160,7 @@ covers just that call, so items agreed elsewhere are missing by construction.
 ## What this sends where
 
 MCP mode sends query words and dates (to `list_meetings`/`list_deals`), then
-the extraction question naming the call, deal, or account (to `ask_zime_brain`).
+the extraction question naming the call, deal, or account (to `ask_zime`).
 Local mode reads only the provided file.
 
 ## Related Skills

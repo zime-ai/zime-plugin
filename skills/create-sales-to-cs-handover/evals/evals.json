@@ -5,29 +5,29 @@
       "id": 1,
       "name": "create-sales-to-cs-handover-eval-1-tool-mandate-resolve-then-evidence",
       "prompt": "with zime-mcp connected, user asks: 'put together a handover for the Acme deal' — the conversation already contains notes about Acme's stakeholders",
-      "expected_output": "The skill resolves the deal with list_deals first, then gathers evidence via ask_deal_brain and call history via list_meetings, reusing the resolved deal_id across calls. The stakeholders section comes from ask_deal_brain, not the earlier notes.",
+      "expected_output": "The skill resolves the deal with list_deals first, then gathers evidence via ask_zime naming the deal and call history via list_meetings, reusing the resolved deal_id across calls. The stakeholders section comes from ask_zime, not the earlier notes.",
       "files": [],
       "expectations": [
-        "list_deals is called to resolve before ask_deal_brain and list_meetings",
+        "list_deals is called to resolve before ask_zime and list_meetings",
         "The resolved deal_id is reused rather than re-triggering disambiguation",
-        "Stakeholder info comes from the ask_deal_brain call, not the earlier conversation notes"
+        "Stakeholder info comes from the ask_zime call, not the earlier conversation notes"
       ]
     },
     {
       "id": 2,
-      "name": "create-sales-to-cs-handover-eval-2-account-scope-uses-account-brain",
+      "name": "create-sales-to-cs-handover-eval-2-account-scope-names-the-account",
       "prompt": "user asks: 'what does CS need to know about Northwind?' — Northwind is an account with several closed deals, no single deal named",
-      "expected_output": "The skill resolves with list_accounts and gathers evidence via ask_account_brain rather than list_deals/ask_deal_brain, since the handover scope is the account rather than one deal.",
+      "expected_output": "The skill resolves with list_accounts and gathers evidence via ask_zime naming the account rather than resolving a single deal, since the handover scope is the account rather than one deal.",
       "files": [],
       "expectations": [
         "list_accounts is called, not list_deals, when no single deal is named",
-        "ask_account_brain is used for the evidence pass, not ask_deal_brain"
+        "the ask_zime evidence question names the account rather than a deal"
       ]
     },
     {
       "id": 3,
       "name": "create-sales-to-cs-handover-eval-3-objections-framed-as-risk",
-      "prompt": "the ask_deal_brain evidence pass surfaces an unresolved pricing objection",
+      "prompt": "the ask_zime evidence pass surfaces an unresolved pricing objection",
       "expected_output": "The handover presents it under 'objections still live / risks CS should watch,' framed as something for CS to monitor rather than as objection-handling coaching for a seller.",
       "files": [],
       "expectations": [
@@ -49,7 +49,7 @@
     {
       "id": 5,
       "name": "create-sales-to-cs-handover-eval-5-honest-failure-partial-packet",
-      "prompt": "list_deals resolves successfully, but ask_deal_brain errors on both the first attempt and the retry",
+      "prompt": "list_deals resolves successfully, but ask_zime errors on both the first attempt and the retry",
       "expected_output": "The handover delivers the CRM snapshot and the list_meetings call history, and states plainly that the evidence sections (why we won, objections, commitments) couldn't be retrieved rather than fabricating them.",
       "files": [],
       "expectations": [

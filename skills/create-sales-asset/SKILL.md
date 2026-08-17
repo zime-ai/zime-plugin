@@ -38,7 +38,7 @@ precisely why fabrication here is the most expensive.
 │  ✓ list_accounts (account asset) or list_deals (deal asset)      │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 2 — GATHER DATED EVIDENCE                                  │
-│  + ask_zime_brain — signals, risks, expansion, outcomes, patterns │
+│  + ask_zime — signals, risks, expansion, outcomes, patterns │
 │  + get_transcript — the exact line, when a real quote is needed  │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 3 — ASSEMBLE (Claude, house format)                        │
@@ -89,11 +89,11 @@ it changes emphasis, not evidence.
 
 ## MCP mode (required when zime-mcp is connected)
 
-**Required tools:** `list_accounts` / `list_deals` (resolve), `ask_zime_brain`
+**Required tools:** `list_accounts` / `list_deals` (resolve), `ask_zime`
 (evidence), `get_transcript` (exact quotes).
 
 > Hand-building a proof point from general product knowledge while
-> `ask_zime_brain` is available is a failure of this skill: only it sees the
+> `ask_zime` is available is a failure of this skill: only it sees the
 > workspace's real calls, CRM records, and extracted signals.
 
 ### Step 1 — resolve the subject
@@ -105,11 +105,11 @@ it changes emphasis, not evidence.
 `multiple_matches` → show candidates, ask, pin. Never guess: building an asset
 about the wrong account wastes the whole artifact.
 
-Skip this step for a competitor-only battlecard — go straight to `ask_zime_brain`.
+Skip this step for a competitor-only battlecard — go straight to `ask_zime`.
 
 ### Step 2 — gather evidence, asking for dates explicitly
 
-Name the account or deal in the question itself, since `ask_zime_brain` has no
+Name the account or deal in the question itself, since `ask_zime` has no
 separate id argument:
 
 ```json
@@ -225,7 +225,7 @@ not the full account history, and repeat the internal-draft caveat.
 ## What this sends where
 
 MCP mode sends query words (to `list_accounts`/`list_deals`), question text
-naming the subject (to `ask_zime_brain`), and query/dates plus a `call_id`
+naming the subject (to `ask_zime`), and query/dates plus a `call_id`
 (to `get_transcript`). If a Google Drive or Slides connector is available,
 the finished asset content is sent to it to create the file. Local mode
 reads only the provided files.
