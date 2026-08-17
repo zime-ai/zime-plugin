@@ -1,6 +1,6 @@
 ---
 name: get-meeting
-description: Looks up ONE meeting or call — title, date, attendees, linked deal, and whether it was recorded. Covers both scheduled calendar meetings (past or upcoming) and recorded calls, since a meeting may have no recording and a recorded call may have no calendar entry. Use whenever someone wants the facts on a single meeting — "when is my Acme call", "who was on the Northwind demo", "did we record the Concerto QBR" — even if they never say "meeting record". Always calls the list_meetings tool on the zime-mcp server when connected, never hand-answers from memory, and handles the disambiguation flow (multiple_matches candidates, pinning an id). Falls back to a user-provided calendar or call export only when no zime-mcp server is available.
+description: Looks up one meeting or call. Shows the date, who was there, the linked deal, and if it was recorded.
 license: MIT
 metadata:
   zime:category: cross-stage

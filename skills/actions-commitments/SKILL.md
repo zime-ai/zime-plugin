@@ -1,6 +1,6 @@
 ---
 name: actions-commitments
-description: Surfaces open action items and commitments — what was promised, by whom, and by when — for one call, one deal, or across an account. Use whenever someone wants to know what's outstanding — "what did we commit to on the Acme call", "what's still open on Northwind", "what did I promise Concerto", "what action items are outstanding this week" — even if they never say "action items". Resolves the scope with list_meetings or list_deals, then delegates extraction to the Zime call or deal agent via ask_call_brain / ask_deal_brain; never invents a commitment, an owner, or a due date that was not actually stated. Falls back to a user-provided transcript only when no zime-mcp server is available.
+description: Shows open action items and commitments. Who promised what, and by when. Works for one call, one deal, or a whole account.
 license: MIT
 metadata:
   zime:category: cross-stage
@@ -27,7 +27,7 @@ whoever seems likely.
 │  ✓ An account  → list_deals / list_meetings for that account     │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 2 — DELEGATE (Zime agent)                                  │
-│  + ask_call_brain for one call · ask_deal_brain for a deal or account arc    │
+│  + ask_zime_brain, naming the call, deal, or account in the question    │
 │  + Agent extracts commitments, owners, dates from real calls     │
 ├─────────────────────────────────────────────────────────────────┤
 │  LOCAL FALLBACK (no zime-mcp)                                    │
@@ -59,13 +59,14 @@ rather than guessing between a call and a deal.
 ## MCP mode (required when zime-mcp is connected)
 
 **Required tools:** `list_meetings` and/or `list_deals` (resolve), plus
-`ask_call_brain` and/or `ask_deal_brain` (extract).
+`ask_zime_brain` (extract).
 
-> `ask_call_brain` and `ask_deal_brain` are the entity-scoped agent tools — an id plus a
-> question, routed to Zime's call or deal agent. Extracting commitments
-> yourself from a fetched transcript while these are available is a failure of
-> this skill: the agents also see extracted signals and CRM linkage, and they
-> distinguish a firm commitment from an idea someone floated.
+> `ask_zime_brain` routes to Zime's global agent, with no separate id
+> argument — name the call, deal, or account in the question text. Extracting
+> commitments yourself from a fetched transcript while it's available is a
+> failure of this skill: the agent also sees extracted signals and CRM
+> linkage, and it distinguishes a firm commitment from an idea someone
+> floated.
 
 ### Step 1 — resolve the scope
 
@@ -73,9 +74,9 @@ Pick the narrowest scope the request implies:
 
 | Request shape | Resolve with | Then |
 |---|---|---|
-| "on the Acme call" | `list_meetings` (`recorded: true`) | `ask_call_brain` |
-| "on the Northwind deal" | `list_deals` | `ask_deal_brain` |
-| "what did I promise Concerto" | `list_deals` for that account | `ask_deal_brain` |
+| "on the Acme call" | `list_meetings` (`recorded: true`) | name the call in the question |
+| "on the Northwind deal" | `list_deals` | name the deal in the question |
+| "what did I promise Concerto" | `list_deals` for that account | name the account in the question |
 
 `multiple_matches` → show candidates, ask, pin the id. Never guess.
 `no_match` → say the window or naming likely excludes it; offer to widen.
@@ -83,16 +84,16 @@ Pick the narrowest scope the request implies:
 ### Step 2 — delegate the extraction
 
 ```json
-{ "call_id": "<call_id>", "question": "List every commitment and action item from this call: what was promised, who owns it, and the due date if one was stated. Separate our commitments from the customer's." }
+{ "question": "List every commitment and action item from the Acme call on Aug 12: what was promised, who owns it, and the due date if one was stated. Separate our commitments from the customer's." }
 ```
 
 or, for a deal or account arc:
 
 ```json
-{ "deal_id": "<deal_id>", "question": "List the open action items and commitments across this deal: what was promised, by whom, when it was promised, and whether it has been closed out." }
+{ "question": "List the open action items and commitments across the Northwind deal: what was promised, by whom, when it was promised, and whether it has been closed out." }
 ```
 
-Resolve pronouns to real names — the agents have no memory of this
+Resolve pronouns to real names — the agent has no memory of this
 conversation.
 
 ### Outcomes
@@ -159,8 +160,8 @@ covers just that call, so items agreed elsewhere are missing by construction.
 ## What this sends where
 
 MCP mode sends query words and dates (to `list_meetings`/`list_deals`), then
-an id and the extraction question (to `ask_call_brain`/`ask_deal_brain`). Local mode reads
-only the provided file.
+the extraction question naming the call, deal, or account (to `ask_zime_brain`).
+Local mode reads only the provided file.
 
 ## Related Skills
 

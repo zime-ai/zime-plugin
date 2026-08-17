@@ -1,6 +1,6 @@
 ---
 name: get-transcript
-description: Returns the FULL verbatim transcript of ONE recorded call. Use whenever someone wants the actual words said — "get me the transcript of the Acme call", "what exactly did they say on the Northwind demo", "pull the recording text for the Concerto QBR" — or when another task needs an exact quotable line. Always calls the get_transcript tool on the zime-mcp server when connected, never reconstructs or paraphrases a transcript from memory or chat context, and handles the disambiguation flow (multiple_matches candidates, pinning a call_id). A transcript exists only for recorded past calls, never for upcoming or unrecorded meetings. Falls back to a user-provided transcript file only when no zime-mcp server is available.
+description: Gets the full word for word transcript of one recorded call. Use when you need the exact words said, or a quotable line.
 license: MIT
 metadata:
   zime:category: cross-stage

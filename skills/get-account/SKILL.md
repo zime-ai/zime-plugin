@@ -1,6 +1,6 @@
 ---
 name: get-account
-description: Looks up ONE CRM account record — domain, industry, owner, account type. Use whenever someone wants the facts on a single named customer or company already in CRM — "pull up the Acme account", "who owns Northwind", "what industry is Concerto in" — even if they never say "account record". Always calls the list_accounts tool on the zime-mcp server when connected, never hand-answers from memory or chat context in its place, and handles the disambiguation flow (multiple_matches candidates, pinning an account_id). For a company NOT yet in CRM, route to account-research instead. Falls back to a user-provided CRM export only when no zime-mcp server is available.
+description: Looks up one account already in CRM. Shows domain, industry, and owner. For a company not yet in CRM, use account-research instead.
 license: MIT
 metadata:
   zime:category: cross-stage

@@ -1,6 +1,6 @@
 ---
 name: competitive-intelligence
-description: Surfaces what customers actually say about competitors — where a named competitor comes up, what they claim, how we're positioned against them, and which patterns repeat across deals. Use whenever someone asks about competitive dynamics — "where is Competitor X showing up", "what do customers say about them", "how do we position against them", "what objections mention competitors" — even if they never say "competitive intelligence". Scopes to one call via ask_call_brain or across the corpus via ask_zime_brain, resolving with list_meetings when a single call is meant; never fills gaps with general market knowledge about the competitor. Falls back to a user-provided transcript only when no zime-mcp server is available.
+description: Shows what customers actually say about competitors. Where they come up, what they claim, and how we compare. Only uses real quotes from real calls.
 license: MIT
 metadata:
   zime:category: cross-stage
@@ -32,8 +32,9 @@ cheaper."
 │                  COMPETITIVE INTELLIGENCE                        │
 ├─────────────────────────────────────────────────────────────────┤
 │  SCOPE FIRST (this skill decides which)                          │
-│  ✓ "on the Acme call"    → list_meetings → ask_call_brain              │
-│  ✓ "across our deals"    → ask_zime_brain (no resolve needed)          │
+│  ✓ "on the Acme call"    → list_meetings, then name the call in the │
+│                             ask_zime_brain question                │
+│  ✓ "across our deals"    → ask_zime_brain directly (no resolve needed)  │
 ├─────────────────────────────────────────────────────────────────┤
 │  DELEGATE (Zime agent)                                           │
 │  + Agent reads real calls, mentions, and extracted signals       │
@@ -72,26 +73,28 @@ differently.
 
 ## MCP mode (required when zime-mcp is connected)
 
-**Required tools:** `ask_zime_brain` (cross-corpus). For single-call scope also
-`list_meetings` (resolve) and `ask_call_brain`.
+**Required tools:** `ask_zime_brain` (all scopes). For single-call scope also
+`list_meetings` first, to name the exact call in the question.
 
-> `ask_call_brain` is the call-scoped agent tool; `ask_zime_brain` routes to Zime's global
-> agent across the whole accessible corpus. Answering from general knowledge
-> about the competitor while either is available is a failure of this skill.
+> `ask_zime_brain` routes to Zime's global agent across the whole accessible
+> corpus, with no separate scoping argument — narrow it by naming the call,
+> account, or window inside the question text. Answering from general
+> knowledge about the competitor while it's available is a failure of this
+> skill.
 
 ### Choosing the scope
 
 | Request shape | Path |
 |---|---|
-| "did Competitor X come up on the Acme call" | `list_meetings` → `ask_call_brain` |
+| "did Competitor X come up on the Acme call" | `list_meetings` to confirm the call, then name it in the question |
 | "where is Competitor X showing up" | `ask_zime_brain` directly |
 | "how do we position against them in deals we won" | `ask_zime_brain` directly |
 | "what did they say about them last quarter" | `ask_zime_brain` with the window in the question |
 
-Don't resolve a call when the question is corpus-wide — narrowing to one call
-would silently answer a much smaller question than the one asked.
+Don't narrow to one call when the question is corpus-wide — that would
+silently answer a much smaller question than the one asked.
 
-### Cross-corpus — `ask_zime_brain`
+### Cross-corpus
 
 ```json
 { "question": "Where has Concerto come up in our calls in the last quarter, what did customers say about them, and how did we position against them?" }
@@ -101,18 +104,18 @@ Send the question close to verbatim with the competitor named explicitly and
 the time window stated in the text — `ask_zime_brain` has no memory of this
 conversation and no separate date parameters.
 
-### Single call — `ask_call_brain`
+### Single call
 
-Resolve first:
+Resolve first, so the call is named correctly:
 
 ```json
 { "query": "Acme", "start_date": "2026-08-01", "end_date": "2026-08-13", "recorded": true }
 ```
 
-then:
+then name it in the question:
 
 ```json
-{ "call_id": "<call_id>", "question": "Did Concerto or any competitor come up on this call? What exactly was said, and how did we respond?" }
+{ "question": "On the Acme call on Aug 12, did Concerto or any competitor come up? What exactly was said, and how did we respond?" }
 ```
 
 ### Outcomes
@@ -184,9 +187,9 @@ competitor, only what the files contain.
 
 ## What this sends where
 
-MCP mode sends the question text (to `ask_zime_brain`), or query words and dates
-plus a `call_id` and question (to `list_meetings` / `ask_call_brain`). Local mode
-reads only the provided files.
+MCP mode sends the question text, with any call/account/window named inside
+it (to `ask_zime_brain`), and query words plus dates when confirming a call
+first (to `list_meetings`). Local mode reads only the provided files.
 
 ## Related Skills
 

@@ -1,6 +1,6 @@
 ---
 name: pipeline-review
-description: Reviews the pipeline across MANY deals — what's at risk, what's stalled, where the value sits, and what to work this week. Use whenever someone asks a pipeline-wide question — "run my pipeline review", "what's at risk this quarter", "which deals are stuck", "what should I focus on this week", "how does my pipeline look" — even if they never say "pipeline review". Delegates the whole analysis to the Zime global agent via ask_zime_brain with no resolve step, since the scope is many deals rather than one; never computes pipeline totals or risk calls from memory or chat context. Falls back to analyzing a user-provided CRM export only when no zime-mcp server is available.
+description: Reviews your whole pipeline. Shows what's at risk, what's stalled, and what to focus on this week.
 license: MIT
 metadata:
   zime:category: cross-stage

@@ -1,6 +1,6 @@
 ---
 name: call-prep
-description: Generates a focused prep note for ONE upcoming customer call — the biggest risk or win condition, the rep's top 2-3 concrete moves, and links back into Zime. Use whenever someone wants to get ready for a specific upcoming meeting — "prep me for my Meridian call tomorrow", "help me get ready for the Concerto demo", "brief me before my 3pm" — even if they never say "prep note". Resolves the meeting with list_meetings, then delegates generation to the Zime prep-note agent via prep_note; never hand-writes the note in the agent's place, and handles the disambiguation flow. Only works for the rep's OWN upcoming meetings. Falls back to assembling a note locally from a meeting-context file plus past-call transcripts only when no zime-mcp server is available.
+description: Builds a quick prep note before an upcoming call. Shows the biggest risk, and 2-3 things to do. Only works for your own upcoming meetings.
 license: MIT
 metadata:
   zime:category: cross-stage

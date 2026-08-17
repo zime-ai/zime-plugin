@@ -1,6 +1,6 @@
 ---
 name: create-sales-to-cs-handover
-description: Fills the Sales-to-CS handover document for one deal or account — stakeholders and motivations, why we won, objections still live, commitments made, call history, and marching orders for CS. Use whenever someone is handing an account over — "build the CS handover for Acme", "prep the handover doc for Northwind", "what does CS need to know about Concerto" — even if they never say "handover". Resolves the deal or account with list_deals / list_accounts, gathers evidence via ask_deal_brain / ask_account_brain and list_meetings, then fills the template; fields only the rep knows are left as explicit TO-FILL prompts rather than guessed, because an invented client sensitivity is worse than a blank one. Falls back to a narrower draft from user-provided files only when no zime-mcp server is available.
+description: Builds the Sales to CS handover doc for one deal or account. Covers stakeholders, why we won, open objections, commitments, and call history. Creates a real Google Doc when connected, otherwise gives you the text to paste in.
 license: MIT
 metadata:
   zime:category: post-sale
@@ -39,13 +39,17 @@ exists to provide.
 │  ✓ list_deals (deal handover) or list_accounts (account)         │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 2 — GATHER                                                 │
-│  + ask_deal_brain / ask_account_brain — why we won, objections, commitments  │
+│  + ask_zime_brain — why we won, objections, commitments          │
 │  + list_meetings — call history, cadence, last engagement        │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 3 — FILL, DON'T GUESS                                      │
 │  ✓ Zime-backed fields filled with evidence + dates               │
 │  ! Rep-only fields left as [SALES TO FILL]                       │
 │  ✓ Open gaps listed at the top so CS sees them first             │
+├─────────────────────────────────────────────────────────────────┤
+│  STEP 4 — DELIVER                                                │
+│  ✓ Create a Google Doc when Google Drive is connected            │
+│  ~ Otherwise hand back the markdown to paste in manually          │
 ├─────────────────────────────────────────────────────────────────┤
 │  LOCAL FALLBACK (no zime-mcp)                                    │
 │  ~ Narrower draft from provided transcripts or CRM export        │
@@ -80,8 +84,8 @@ design, not a shortfall.
 
 ## MCP mode (required when zime-mcp is connected)
 
-**Required tools:** `list_deals` / `list_accounts` (resolve), `ask_deal_brain` /
-`ask_account_brain` (evidence), `list_meetings` (call history).
+**Required tools:** `list_deals` / `list_accounts` (resolve), `ask_zime_brain`
+(evidence), `list_meetings` (call history).
 
 ### Step 1 — resolve
 
@@ -94,8 +98,11 @@ wrong account is worse than none.
 
 ### Step 2 — gather, asking for dates and names
 
+Name the deal or account in the question itself, since `ask_zime_brain` has no
+separate deal/account scoping argument:
+
 ```json
-{ "deal_id": "<deal_id>", "question": "For this deal: who are the stakeholders and what does each one care about, why did we win, what objections or blockers are still live, and what did we commit to delivering? Give the evidence, the speaker, and the date for each." }
+{ "question": "For the Acme deal: who are the stakeholders and what does each one care about, why did we win, what objections or blockers are still live, and what did we commit to delivering? Give the evidence, the speaker, and the date for each." }
 ```
 
 Call history:
@@ -170,6 +177,19 @@ _Drafted from Zime call and CRM data on [date]. Sections marked
 - [unresolved item] — [source]
 ```
 
+## Deliver as a Google Doc
+
+Once the markdown above is filled in, create the actual handover doc so CS
+gets a real file, not a chat message to copy by hand:
+
+1. Check whether a Google Drive connector is available.
+2. If yes, call it to create a file with `title: "Sales → CS Handover: [Account]"`,
+   `mimeType: "application/vnd.google-apps.document"`, and the markdown above
+   as the text content. Share the resulting link back to the user.
+3. If no Drive connector is available, say so plainly and give the user the
+   markdown to paste into a doc themselves. Don't silently stay in chat —
+   name the gap so the user knows a manual step is needed.
+
 ### Rules
 
 - **`[SALES TO FILL]` is mandatory** for: NDA and charter links, drive folder,
@@ -206,9 +226,11 @@ carry.
 
 ## What this sends where
 
-MCP mode sends query words (to `list_deals`/`list_accounts`), an id plus the
-evidence question (to `ask_deal_brain`/`ask_account_brain`), and query words plus dates (to
-`list_meetings`). Local mode reads only the provided files.
+MCP mode sends query words (to `list_deals`/`list_accounts`), the evidence
+question naming the deal or account (to `ask_zime_brain`), and query words
+plus dates (to `list_meetings`). If a Google Drive connector is available,
+the finished handover text is sent to it to create the doc. Local mode reads
+only the provided files.
 
 ## Related Skills
 
