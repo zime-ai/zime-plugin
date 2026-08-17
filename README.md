@@ -1,6 +1,6 @@
 # zime-plugin
 
-[![Skills](https://img.shields.io/badge/skills-16-blue)](skills/)
+[![Skills](https://img.shields.io/badge/skills-15-blue)](skills/)
 [![Internal](https://img.shields.io/badge/visibility-internal--only-red)](#visibility)
 
 The internal, Zime-only Claude Code plugin: Agent Skills coupled to Zime
