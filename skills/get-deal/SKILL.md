@@ -1,6 +1,6 @@
 ---
 name: get-deal
-description: Looks up ONE CRM deal record — stage, amount, owner, close date. Use whenever someone wants the facts on a single named deal — "what stage is Acme expansion in", "what's the close date on Northwind", "who owns the Concerto deal" — even if they never say "deal record". Always calls the list_deals tool on the zime-mcp server when connected, never hand-answers from memory or chat context in its place, and handles the disambiguation flow (multiple_matches candidates, pinning a deal_id). Falls back to a user-provided CRM export only when no zime-mcp server is available.
+description: Looks up one deal's CRM record. Shows stage, amount, owner, and close date.
 license: MIT
 metadata:
   zime:category: cross-stage

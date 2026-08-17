@@ -1,6 +1,6 @@
 ---
 name: create-sales-asset
-description: Builds a sales asset in the house format — an account review deck, a proof-point one-pager, a battlecard section, a case-study writeup, or objection talking points — assembled only from facts a tool returned this conversation. Use whenever someone wants collateral built from real customer evidence — "build me an account review for Acme", "make a proof point for the Northwind deal", "put together a battlecard against Concerto", "give me talking points for the security objection" — even if they never say "asset". Resolves the subject with list_accounts or list_deals, gathers dated evidence via ask_deal_brain / ask_account_brain / ask_zime_brain, and pulls exact quotes with get_transcript; never originates a metric, quote, or customer outcome. Always an internal draft, never customer-ready collateral. Falls back to a narrower asset from user-provided files only when no zime-mcp server is available.
+description: Builds a sales asset from real customer evidence only, never made up facts. Covers account review decks (as slides), one-pagers, battlecards, case studies, and objection talking points. Always an internal draft, not customer-ready.
 license: MIT
 metadata:
   zime:category: cross-stage
@@ -38,13 +38,16 @@ precisely why fabrication here is the most expensive.
 │  ✓ list_accounts (account asset) or list_deals (deal asset)      │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 2 — GATHER DATED EVIDENCE                                  │
-│  + ask_account_brain / ask_deal_brain — signals, risks, expansion, outcomes  │
-│  + ask_zime_brain — cross-account patterns, competitive positioning    │
+│  + ask_zime_brain — signals, risks, expansion, outcomes, patterns │
 │  + get_transcript — the exact line, when a real quote is needed  │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 3 — ASSEMBLE (Claude, house format)                        │
 │  ✓ references/deck-grammar.md — the section order we use         │
 │  ✓ Every row carries evidence + date + account                   │
+├─────────────────────────────────────────────────────────────────┤
+│  STEP 4 — DELIVER                                                │
+│  ✓ Account review deck → real slides (Google Slides) when connected │
+│  ✓ Every other asset type → a doc, or markdown if no connector   │
 ├─────────────────────────────────────────────────────────────────┤
 │  ALWAYS                                                          │
 │  ! Internal draft. Needs review before it leaves the building.   │
@@ -86,12 +89,11 @@ it changes emphasis, not evidence.
 
 ## MCP mode (required when zime-mcp is connected)
 
-**Required tools:** `list_accounts` / `list_deals` (resolve), `ask_account_brain` /
-`ask_deal_brain` / `ask_zime_brain` (evidence), `get_transcript` (exact quotes).
+**Required tools:** `list_accounts` / `list_deals` (resolve), `ask_zime_brain`
+(evidence), `get_transcript` (exact quotes).
 
-> `ask_account_brain` and `ask_deal_brain` are the entity-scoped agent tools — an id plus a
-> question. Hand-building a proof point from general product knowledge while
-> these are available is a failure of this skill: only the agents see the
+> Hand-building a proof point from general product knowledge while
+> `ask_zime_brain` is available is a failure of this skill: only it sees the
 > workspace's real calls, CRM records, and extracted signals.
 
 ### Step 1 — resolve the subject
@@ -107,8 +109,11 @@ Skip this step for a competitor-only battlecard — go straight to `ask_zime_bra
 
 ### Step 2 — gather evidence, asking for dates explicitly
 
+Name the account or deal in the question itself, since `ask_zime_brain` has no
+separate id argument:
+
 ```json
-{ "account_id": "<account_id>", "question": "For this account: what expansion signals, churn risks, and open commitments appear in our calls? For each one give the evidence, the call date, and who said it." }
+{ "question": "For the Acme account: what expansion signals, churn risks, and open commitments appear in our calls? For each one give the evidence, the call date, and who said it." }
 ```
 
 Cross-account or competitive:
@@ -168,6 +173,22 @@ by marketing or legal._
 _Sources: Zime call recordings — [account], [dates]._
 ```
 
+## Deliver in the right format
+
+- **Account review deck:** this is a presentation, not a document. Break the
+  content above into one slide per section (title, problem, evidence, what
+  it means, gaps). If a Google Slides connector is available, create the
+  file with `mimeType: "application/vnd.google-apps.presentation"` and one
+  slide's worth of text per section, then share the link. Slide conversion
+  from plain text is rough — tell the user the layout will need a quick pass
+  in Slides to clean up spacing and bullets. If no connector is available,
+  give the markdown above and say it needs to be turned into slides
+  manually.
+- **Every other asset type** (one-pager, battlecard section, case study,
+  objection talking points): these are documents, not slides. If a Google
+  Drive connector is available, create a Google Doc from the markdown
+  above. Otherwise hand back the markdown to paste in.
+
 ### Rules
 
 - **Every row: account, evidence, date.** A row missing any of the three
@@ -203,9 +224,10 @@ not the full account history, and repeat the internal-draft caveat.
 
 ## What this sends where
 
-MCP mode sends query words (to `list_accounts`/`list_deals`), ids plus
-evidence questions (to `ask_account_brain`/`ask_deal_brain`), question text (to
-`ask_zime_brain`), and query/dates plus a `call_id` (to `get_transcript`). Local mode
+MCP mode sends query words (to `list_accounts`/`list_deals`), question text
+naming the subject (to `ask_zime_brain`), and query/dates plus a `call_id`
+(to `get_transcript`). If a Google Drive or Slides connector is available,
+the finished asset content is sent to it to create the file. Local mode
 reads only the provided files.
 
 ## Related Skills

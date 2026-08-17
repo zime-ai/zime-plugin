@@ -1,6 +1,6 @@
 ---
 name: daily-briefing
-description: Gives the rep their day — today's meetings, what changed on their deals, and what needs attention now. Use whenever someone asks for their day or week at a glance — "what's my day look like", "brief me for today", "what do I need to know this morning", "what changed on my deals", "what's on my plate" — even if they never say "briefing". Delegates to the Zime instant agent via ask_zime_brain with no resolve step, since the scope is the rep's whole day rather than one entity; never assembles the briefing from memory or chat context. Optionally lists today's meetings with list_meetings for a concrete schedule. Falls back to a user-provided calendar or CRM export only when no zime-mcp server is available.
+description: Gives you your day at a glance. Today's meetings, what changed on your deals, and what needs attention now.
 license: MIT
 metadata:
   zime:category: cross-stage

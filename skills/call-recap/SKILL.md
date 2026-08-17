@@ -1,6 +1,6 @@
 ---
 name: call-recap
-description: Produces a structured recap of ONE past recorded call — overview, decisions, risks, action items, and questions to clarify next. Use whenever someone wants to know what happened on a specific call — "recap my Acme call", "what happened on the Northwind demo", "summarize yesterday's Concerto QBR" — even if they never say "recap". Resolves the call with list_meetings, then delegates the recap to the Zime call agent via ask_call_brain; never writes the recap from memory or from the raw transcript in the agent's place. Falls back to recapping a user-provided transcript only when no zime-mcp server is available.
+description: Summarizes one past call. Shows what was decided, what's risky, and what's still open.
 license: MIT
 metadata:
   zime:category: cross-stage
@@ -25,8 +25,8 @@ what a transcript literally says.
 │  ✓ list_meetings, recorded calls only                            │
 │  ✓ Ambiguous → show candidates, ask, pin call_id                 │
 ├─────────────────────────────────────────────────────────────────┤
-│  STEP 2 — DELEGATE (Zime call agent)                             │
-│  + ask_call_brain with the recap question, scoped to that call_id       │
+│  STEP 2 — DELEGATE (Zime agent)                                  │
+│  + ask_zime_brain with the recap question, naming the call        │
 │  + Agent reads transcript + signals + linked deal                │
 │  + Returns the recap; this skill does not rewrite it              │
 ├─────────────────────────────────────────────────────────────────┤
@@ -59,13 +59,13 @@ nothing to work from and I'll say so.
 
 ## MCP mode (required when zime-mcp is connected)
 
-**Required tools:** `list_meetings` (resolve) and `ask_call_brain` (delegate).
+**Required tools:** `list_meetings` (resolve) and `ask_zime_brain` (delegate).
 
-> `ask_call_brain` is the call-scoped agent tool — it takes a `call_id` plus a
-> question and routes to Zime's call agent. Writing the recap yourself from a
-> fetched transcript while `ask_call_brain` is available is a failure of this
-> skill: the agent also sees the call's extracted signals and CRM linkage,
-> which a raw transcript does not carry.
+> `ask_zime_brain` routes to Zime's global agent, with no separate `call_id`
+> argument — name the call (title and date) in the question text. Writing the
+> recap yourself from a fetched transcript while `ask_zime_brain` is available
+> is a failure of this skill: the agent also sees the call's extracted
+> signals and CRM linkage, which a raw transcript does not carry.
 
 ### Step 1 — resolve the call
 
@@ -82,10 +82,10 @@ nothing to work from and I'll say so.
 - A resolved row with `has_transcript: false` → the meeting happened but
   wasn't recorded. Say that; don't proceed to Step 2.
 
-### Step 2 — delegate to the call agent
+### Step 2 — delegate to the agent
 
 ```json
-{ "call_id": "<call_id>", "question": "Give me a structured recap of this call: overview, key decisions and commitments, risks and blockers, action items by owner, and questions to clarify next time." }
+{ "question": "Give me a structured recap of the Acme call on Aug 12: overview, key decisions and commitments, risks and blockers, action items by owner, and questions to clarify next time." }
 ```
 
 Resolve pronouns to real names in the question — the agent has no memory of
@@ -140,9 +140,9 @@ gaps rather than inferring decisions that were never stated.
 
 ## What this sends where
 
-MCP mode sends the query words and date range (to `list_meetings`), then a
-`call_id` and the recap question (to `ask_call_brain`). Local mode reads only the
-file the user provided.
+MCP mode sends the query words and date range (to `list_meetings`), then the
+recap question naming the call (to `ask_zime_brain`). Local mode reads only
+the file the user provided.
 
 ## Related Skills
 

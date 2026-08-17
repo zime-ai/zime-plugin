@@ -1,6 +1,6 @@
 ---
 name: account-research
-description: Researches a PROSPECT company we have not sold to yet — what they do, how their B2B sales or CS motion works, who the buyers are, and whether they fit our ICP. Use whenever someone wants outside-in research before first contact — "research TrueFoundry", "do they fit our ICP", "what's the angle on Securonix", "look into this prospect before I reach out" — even if they never say "research". Primary source is Claude web search; calls ask_zime_brain once at the start to pull OUR ICP definition and won-customer patterns from workspace documents so the fit assessment has a real baseline. Not for existing CRM accounts — route those to get-account. Works standalone on web search alone when no zime-mcp server is available.
+description: Research a new prospect company before you reach out. Checks if they fit our ICP and who the buyers might be. Use for companies not yet in CRM. For existing accounts, use get-account instead.
 license: MIT
 metadata:
   zime:category: pre-pipeline

@@ -1,6 +1,6 @@
 ---
 name: follow-up
-description: Drafts the follow-up email after ONE past call — recapping what was agreed and stating the next step, grounded in what was actually said. Use whenever someone wants the post-call email — "draft a follow-up for my Acme call", "write the recap email to Northwind", "send Concerto a note after yesterday's demo" — even if they never say "follow-up". Resolves the call with list_meetings, then delegates drafting to the Zime call agent via ask_call_brain; never invents a commitment, a number, or a next step the call didn't contain. Always presented as a draft for the rep to review before sending. Falls back to drafting from a user-provided transcript only when no zime-mcp server is available.
+description: Drafts the follow-up email after one call. Recaps what was agreed and states the next step, using only what was actually said. Always a draft for you to review before sending.
 license: MIT
 metadata:
   zime:category: cross-stage
@@ -24,8 +24,8 @@ lines and next steps are real rather than plausible.
 │  ✓ list_meetings, recorded calls only                            │
 │  ✓ Ambiguous → show candidates, ask, pin call_id                 │
 ├─────────────────────────────────────────────────────────────────┤
-│  STEP 2 — DELEGATE (Zime call agent)                             │
-│  + ask_call_brain drafts from real commitments and next steps          │
+│  STEP 2 — DELEGATE (Zime agent)                                  │
+│  + ask_zime_brain drafts from real commitments and next steps, naming the call │
 │  + Returns the draft; this skill formats and captions it         │
 ├─────────────────────────────────────────────────────────────────┤
 │  ALWAYS                                                          │
@@ -58,13 +58,14 @@ draft. Only recorded calls can be drafted from.
 
 ## MCP mode (required when zime-mcp is connected)
 
-**Required tools:** `list_meetings` (resolve) and `ask_call_brain` (draft).
+**Required tools:** `list_meetings` (resolve) and `ask_zime_brain` (draft).
 
-> `ask_call_brain` is the call-scoped agent tool — a `call_id` plus a question,
-> routed to Zime's call agent. Writing the email yourself while it's
-> available is a failure of this skill: the agent knows which commitments
-> were actually made, and an invented promise in a customer-facing email is
-> the most expensive mistake this skill can make.
+> `ask_zime_brain` routes to Zime's global agent, with no separate `call_id`
+> argument — name the call (title and date) in the question text. Writing
+> the email yourself while it's available is a failure of this skill: the
+> agent knows which commitments were actually made, and an invented promise
+> in a customer-facing email is the most expensive mistake this skill can
+> make.
 
 ### Step 1 — resolve the call
 
@@ -79,7 +80,7 @@ draft from a different call.
 ### Step 2 — delegate the draft
 
 ```json
-{ "call_id": "<call_id>", "question": "Draft a follow-up email to the customer for this call: recap what was discussed, restate the commitments we made, and propose the agreed next step with timing." }
+{ "question": "Draft a follow-up email to the customer for the Acme call on Aug 12: recap what was discussed, restate the commitments we made, and propose the agreed next step with timing." }
 ```
 
 Add the user's emphasis to the question verbatim if they gave one. Resolve
@@ -170,9 +171,9 @@ draft covers only the provided transcript.
 
 ## What this sends where
 
-MCP mode sends the query words and date range (to `list_meetings`), then a
-`call_id` and the drafting question (to `ask_call_brain`). Local mode reads only the
-provided file. Neither mode sends email.
+MCP mode sends the query words and date range (to `list_meetings`), then the
+drafting question naming the call (to `ask_zime_brain`). Local mode reads
+only the provided file. Neither mode sends email.
 
 ## Related Skills
 

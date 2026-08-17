@@ -1,6 +1,6 @@
 ---
 name: deal-strategy
-description: Deep-dives ONE deal — where it actually stands, the objections and risks in play, who the stakeholders are, and the concrete moves to advance it. Use whenever someone wants to think through a single deal — "how do I win the Acme deal", "what's blocking Northwind", "what are the objections on Concerto", "what should I do next on this deal" — even if they never say "strategy". Resolves the deal with list_deals, then delegates the analysis to the Zime deal agent via ask_deal_brain; never substitutes generic sales advice for the agent's grounded read of the real calls and CRM record. Falls back to a narrower read of a user-provided transcript or CRM export only when no zime-mcp server is available.
+description: Digs into one deal. Shows where it stands, the risks and objections, who the stakeholders are, and what to do next. Grounded in real calls, not generic sales advice.
 license: MIT
 metadata:
   zime:category: cross-stage
@@ -33,7 +33,7 @@ unknown rather than filling it with best-practice filler.
 │  ✓ Ambiguous → show candidates, ask, pin                         │
 ├─────────────────────────────────────────────────────────────────┤
 │  STEP 2 — DELEGATE (Zime deal agent)                             │
-│  + ask_deal_brain, scoped to that deal_id                              │
+│  + ask_zime_brain, naming the deal in the question                     │
 │  + Agent reads all calls on the deal + signals + CRM             │
 │  + Returns the analysis; this skill does not re-reason it         │
 ├─────────────────────────────────────────────────────────────────┤
@@ -66,11 +66,12 @@ through — it focuses the agent's analysis.
 
 ## MCP mode (required when zime-mcp is connected)
 
-**Required tools:** `list_deals` (resolve) and `ask_deal_brain` (analyze).
+**Required tools:** `list_deals` (resolve) and `ask_zime_brain` (analyze).
 
-> `ask_deal_brain` is the deal-scoped agent tool — a `deal_id` plus a question,
-> routed to Zime's deal agent. Answering from general sales knowledge while
-> it's available is a failure of this skill.
+> `ask_zime_brain` routes to Zime's agent over the whole workspace — name the
+> deal in the question text since there's no separate `deal_id` argument.
+> Answering from general sales knowledge while it's available is a failure of
+> this skill.
 
 ### Step 1 — resolve the deal
 
@@ -88,7 +89,7 @@ likely explains it; never analyze a similarly-named deal.
 ### Step 2 — delegate the analysis
 
 ```json
-{ "deal_id": "<deal_id>", "question": "Where does this deal actually stand? Cover: the objections and risks in play, the stakeholders and who is championing us, what has moved and what has stalled, and the two or three concrete moves that would most advance it." }
+{ "question": "For the Acme expansion deal: where does it actually stand? Cover the objections and risks in play, the stakeholders and who is championing us, what has moved and what has stalled, and the two or three concrete moves that would most advance it." }
 ```
 
 If the user gave an angle, append it verbatim: *"The rep says they've gone
@@ -152,8 +153,8 @@ filling them with standard playbook advice.
 
 ## What this sends where
 
-MCP mode sends the query words (to `list_deals`), then a `deal_id` and the
-analysis question (to `ask_deal_brain`). Local mode reads only the provided files.
+MCP mode sends the query words (to `list_deals`), then the analysis question
+naming the deal (to `ask_zime_brain`). Local mode reads only the provided files.
 
 ## Related Skills
 
