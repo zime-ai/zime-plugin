@@ -1,0 +1,89 @@
+name: release PR
+
+# Opens (or refreshes) a PR that bumps .claude-plugin/plugin.json when skill
+# content changes on main.
+#
+# Why a PR rather than pushing the bump straight to main: claude.ai only syncs
+# an org marketplace when "a pull request with a plugin version bump is merged
+# to the default branch". Direct pushes to main never trigger a sync, so a
+# bump that lands by push publishes nothing until an admin clicks Update by
+# hand. Merging the PR this workflow opens is what actually ships a release.
+#
+# Bump size is deliberately NOT inferred from commit messages. A tool rename is
+# breaking and a description tweak is not, and nothing in a commit subject
+# reliably tells those apart -- so this always proposes a patch bump and leaves
+# the maintainer to edit the PR when the change deserves minor or major.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "skills/**"
+      - ".claude-plugin/**"
+  workflow_dispatch:
+
+concurrency:
+  group: release-pr
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  propose_bump:
+    # Skip the commit this workflow's own merge produces, so merging a release
+    # PR does not immediately open another one.
+    if: ${{ !startsWith(github.event.head_commit.message, 'Release ') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute the next patch version
+        id: ver
+        run: |
+          set -euo pipefail
+          current=$(python3 -c "import json;print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          next=$(python3 - "$current" <<'PY'
+          import sys
+          major, minor, patch = (int(p) for p in sys.argv[1].split('.'))
+          print(f"{major}.{minor}.{patch + 1}")
+          PY
+          )
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "next=$next"       >> "$GITHUB_OUTPUT"
+
+      - name: Write the new version
+        run: |
+          set -euo pipefail
+          python3 - "${{ steps.ver.outputs.next }}" <<'PY'
+          import json, sys
+          path = '.claude-plugin/plugin.json'
+          # Read/write as text so key order and formatting survive; a json.dump
+          # round-trip would reformat the whole file and bury the one-line diff.
+          src = open(path).read()
+          current = json.loads(src)['version']
+          open(path, 'w').write(src.replace(f'"version": "{current}"', f'"version": "{sys.argv[1]}"', 1))
+          PY
+
+      - name: Open or refresh the release PR
+        # Pinned to a release commit SHA, not @v7 -- same reasoning as the
+        # skills-ref and pr-agent pins: upstream changes can't silently break
+        # CI. Bump deliberately by resolving the new tag's commit via:
+        #   gh api repos/peter-evans/create-pull-request/git/refs/tags/<tag> --jq '.object.sha'
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        with:
+          branch: release/next
+          title: "Release ${{ steps.ver.outputs.next }}"
+          commit-message: "Release ${{ steps.ver.outputs.next }}"
+          body: |
+            Bumps `.claude-plugin/plugin.json` from `${{ steps.ver.outputs.current }}` to `${{ steps.ver.outputs.next }}`.
+
+            Merging this PR is what publishes the release: claude.ai syncs an org
+            marketplace when a PR carrying a version bump is merged to the default
+            branch, and ignores direct pushes to it.
+
+            This workflow always proposes a **patch** bump, because a commit subject
+            cannot reliably distinguish a breaking change from a cosmetic one. If the
+            changes being released rename or remove a tool, or otherwise break
+            callers, edit the version in this PR before merging.
