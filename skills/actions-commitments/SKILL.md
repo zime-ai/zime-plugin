@@ -144,28 +144,22 @@ Rules:
   closed — don't silently re-open it.
 
 
-### Render it as a visual artifact
+### Render it inline in the chat
 
-Present the finished output as a self-contained HTML artifact rather than
-plain markdown in the chat, so it's scannable at a glance:
+Present the finished output **inline in the chat response** as markdown,
+following the format above. Do not create an artifact for it: the result is
+short enough to read in place, and pushing it into a separate panel costs
+the reader a click for no gain.
 
-- **Card-style sections** for each block above, not one long wall of text.
-- **Badges** for short labelled values (stage, status, owner, dates).
-- **Light colour accents on status and risk fields only** — red for
-  at-risk/blocked/overdue, amber for needs-attention, green for
-  on-track/confirmed. Colour carries meaning here, so never colour a field
-  that has no status semantics, and always keep the word as well as the
-  colour: colour alone is unreadable for anyone who can't distinguish it.
-- **Keep prose in the chat response, not in the artifact.** Caveats, what
-  you did, and what to do next belong in the surrounding message. The
-  artifact holds the structured result.
-- Every grounding rule above still applies. An artifact makes gaps *less*
-  visible, so a missing value stays visible as "not stated" rather than
-  being quietly dropped to keep a card tidy.
+Keep it scannable without leaving the chat:
 
-Fall back to the markdown above when artifacts aren't available in the
-current environment (for example Claude Code in a terminal). Say which you
-did only if the user asked for a specific format.
+- **Tables** for the record and row-per-item sections already shown above.
+- **Bold** the field labels and the values that carry the answer.
+- Mark status and risk in **words**, not colour — inline chat has no
+  reliable colour, so write "at risk", "overdue", or "on track" rather than
+  relying on a swatch the reader may not see.
+- A missing value stays visible as "not stated". Compact formatting is not
+  a licence to drop the gaps this skill is required to surface.
 
 ## Tips
 

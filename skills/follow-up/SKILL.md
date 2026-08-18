@@ -156,19 +156,16 @@ Here's what we agreed:
 - Always caption it as a draft. This skill does not send email.
 
 
-### Render it as a visual artifact
+### Render it inline in the chat
 
-Wrap **only the provenance caption and a summary of the commitments** in a
-self-contained HTML artifact — card-style, with badges for owner and due
-date and colour accents on status (red for overdue, green for confirmed).
+Deliver the caption and the email **inline in the chat response**. Do not
+create an artifact for it: the rep is going to select the email body and
+paste it into a mail client, and an artifact makes that harder rather than
+easier.
 
-**The email body itself stays plain text in the chat response.** It is going
-to be copy-pasted into a mail client, so it must not carry artifact markup,
-and the existing no-markdown email style rules above still hold. If putting
-the email in an artifact would make it harder to copy cleanly, skip the
-artifact entirely and deliver plain text.
-
-Fall back to the markdown above when artifacts aren't available.
+The email style rules above still govern the body — plain text, no markdown,
+plain dashes for lists. Keep any `[confirm timing]` placeholders visible
+rather than tidying them away.
 
 ## Tips
 
