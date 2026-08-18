@@ -1,34 +1,40 @@
 # zime-plugin
 
 [![Skills](https://img.shields.io/badge/skills-15-blue)](skills/)
-[![Internal](https://img.shields.io/badge/visibility-internal--only-red)](#visibility)
+[![Requires](https://img.shields.io/badge/requires-Zime%20account-blue)](#connector)
 
-The internal, Zime-only Claude Code plugin: Agent Skills coupled to Zime
-products, bundled with the Zime MCP connector config so installing the
-plugin wires up both together. The counterpart open repo is
+The Zime Claude Code plugin: Agent Skills coupled to Zime products, bundled
+with the Zime MCP connector config so installing the plugin wires up both
+together. The counterpart repo is
 [zime-gtm-skills](https://github.com/zime-ai/zime-gtm-skills), which holds
 skills that run standalone on a local file with no product coupling;
 **this repo holds the skills (and the connector) that couple to Zime
-products** — zime-mcp tools, workspace data — and therefore can't go open
-source.
+products** — zime-mcp tools, live workspace data.
 
 Same format (the [Agent Skills](https://agentskills.io) spec), same
 structure, same validators, same trust bar: every factual claim a skill
 produces traces to a source, never a plausible guess.
 
-## Visibility
+## What this repo does and does not contain
 
-Internal only. Do not open-source, fork publicly, or share outside Zime.
-Even here, three things never land in a tracked file:
+The skills here address Zime through named MCP tools, so the repository
+carries prompts and routing logic, never credentials or customer records.
+Three things never land in a tracked file:
 
 1. **Secrets** — API keys, tokens, auth headers, company ids.
 2. **Customer data** — real account names, deal names, attendee emails,
-   transcripts. Sample data is always synthetic.
+   transcripts. Every example is fictional (`Acme`, `Northwind`,
+   `Meridian`), and sample assets are always synthetic.
 3. **Internal endpoints** — `internal-*` hostnames, admin API paths, raw
    HTTP calls. Skills talk to Zime through named MCP tools, nothing lower.
 
-A skill with **no** product coupling doesn't belong here — contribute it
-to the open repo instead.
+`scripts/scan-content.py` enforces the first and third in CI, and the
+second against a local denylist. Using the skills still requires a Zime
+account: the connector authenticates per user and enforces access
+server-side, so installing the plugin grants no data access by itself.
+
+A skill with **no** product coupling belongs in
+[zime-gtm-skills](https://github.com/zime-ai/zime-gtm-skills) instead.
 
 ## Available skills
 
@@ -137,4 +143,5 @@ zime-plugin/
 └── README.md
 ```
 
-Maintained by [Zime](https://zime.ai). Internal use only.
+Maintained by [Zime](https://zime.ai). Using the skills requires a Zime
+account.

@@ -4,15 +4,17 @@ Guidelines for AI agents working in this repository.
 
 ## Repository overview
 
-The internal-only counterpart to
+The product-coupled counterpart to
 [zime-gtm-skills](https://github.com/zime-ai/zime-gtm-skills). Skills here
 are allowed — expected — to couple to Zime products: zime-mcp tools,
 connectors, live workspace data. That coupling is exactly why they live
-here instead of the open repo.
+here rather than in the standalone repo.
 
 - **Name**: zime-plugin
-- **Visibility**: private, Zime internal only — never open-source or
-  mirror publicly
+- **Visibility**: public. The skills carry prompts and tool routing, never
+  credentials or customer records, and the connector enforces access
+  per user server-side. The content rules below are what keep that true —
+  treat them as hard constraints, not conventions.
 - **Maintained by**: [Zime](https://zime.ai)
 - **Contains**: `skills/` (this repo's Agent Skills) plus a bundled MCP
   server config (`.mcp.json`) pointing at the live Zime MCP connector at
@@ -86,6 +88,11 @@ Coupling to Zime products is allowed here. These still are not:
    any tracked file.
 2. **No customer data.** No real account names, deal names, attendee
    emails, or transcript excerpts — sample assets are always synthetic.
+   Examples use fictional companies (`Acme`, `Northwind`, `Meridian`); a
+   real customer name in an example prompt is a leak, and the repository is
+   public. `scan-content.py` checks this against `.private/`'s denylist,
+   which is gitignored — so the rule **skips** rather than fails when the
+   file is absent. Keep a local copy or this check silently passes.
 3. **No internal endpoints.** No `internal-*` hostnames, admin API paths,
    or raw HTTP calls in skill content. A skill addresses Zime through a
    named MCP tool (e.g. the zime-mcp `prep_note` tool, wrapped here by the
