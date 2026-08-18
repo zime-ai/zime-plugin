@@ -120,17 +120,14 @@ Rules:
   here, not from a synthesis tool's paraphrase.
 
 
-### Render it as a visual artifact
+### Render it inline in the chat
 
-Put the **header block** (call, date, attendees, linked deal) in a
-card-style HTML artifact with badges for the metadata fields.
+Present the header block and the transcript **inline in the chat response**
+as markdown, following the format above. Do not create an artifact for it.
 
-**The transcript stays verbatim.** Never re-style, re-wrap, truncate, or
-colour speaker turns to make them look tidier — this skill exists to return
-exactly what was said. A long transcript may go in the artifact below the
-header for scrolling, but the text is unaltered.
-
-Fall back to the markdown above when artifacts aren't available.
+The transcript is the payload, so keep it plain: no re-wrapping, no
+re-styling of speaker turns, no truncation to make it look tidier. Bold the
+header field labels only.
 
 ## Tips
 
