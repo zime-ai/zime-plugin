@@ -1,7 +1,7 @@
 {
   "name": "zime-plugin",
   "description": "Zime Claude Code plugin: Agent Skills coupled to Zime products, plus the bundled Zime MCP connector (mcp.zime.ai). Requires a Zime account — the skills call the Zime connector for live call, deal, and CRM data.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": {
     "name": "Zime",
     "url": "https://zime.ai"
