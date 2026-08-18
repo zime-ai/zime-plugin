@@ -133,22 +133,28 @@ Rules:
   information: it often means nobody asked on the calls.
 
 
-### Render it inline in the chat
+### Render it as an inline visual
 
-Present the finished output **inline in the chat response** as markdown,
-following the format above. Do not create an artifact for it: the result is
-short enough to read in place, and pushing it into a separate panel costs
-the reader a click for no gain.
+Present the finished output as an **inline visual in the chat response** —
+lightweight HTML rendered in the conversation itself, not an artifact in a
+side panel, and not plain markdown.
 
-Keep it scannable without leaving the chat:
+Build it to be scannable at a glance:
 
-- **Tables** for the record and row-per-item sections already shown above.
-- **Bold** the field labels and the values that carry the answer.
-- Mark status and risk in **words**, not colour — inline chat has no
-  reliable colour, so write "at risk", "overdue", or "on track" rather than
-  relying on a swatch the reader may not see.
-- A missing value stays visible as "not stated". Compact formatting is not
-  a licence to drop the gaps this skill is required to surface.
+- **Card-style sections** for each block above, rather than one run of text.
+- **Badges** for short labelled values (stage, amount, owner, dates).
+- **Colour accents on status and risk fields**: red for
+  at-risk/blocked/overdue, amber for needs-attention, green for
+  on-track/confirmed. Colour carries meaning, so keep the word alongside it
+  and leave fields with no status semantics uncoloured.
+- Keep prose in the surrounding chat message. The visual holds the
+  structured result; caveats and next steps go in the text around it.
+- A missing value stays visible as "not stated". A tidy card is not a reason
+  to drop a gap this skill is required to surface.
+
+Fall back to the markdown above when inline visuals aren't available — in
+Claude Code, on mobile, or wherever HTML can't render. Say which you did
+only if the user asked for a specific format.
 
 ## Tips
 
