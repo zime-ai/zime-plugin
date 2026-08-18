@@ -122,12 +122,16 @@ Rules:
 
 ### Render it inline in the chat
 
-Present the header block and the transcript **inline in the chat response**
-as markdown, following the format above. Do not create an artifact for it.
+Render the **header block** (call, date, attendees, linked deal) as a small
+inline visual — a card with badges for the metadata fields — so the reader
+can see at a glance which call this is.
 
-The transcript is the payload, so keep it plain: no re-wrapping, no
-re-styling of speaker turns, no truncation to make it look tidier. Bold the
-header field labels only.
+**The transcript itself stays plain text below it.** No re-wrapping, no
+re-styling of speaker turns, no truncation, no colour: this skill exists to
+return exactly what was said, and a long transcript is easier to read and
+copy as text than inside a rendered box.
+
+Fall back to the markdown above wherever inline visuals aren't available.
 
 ## Tips
 
