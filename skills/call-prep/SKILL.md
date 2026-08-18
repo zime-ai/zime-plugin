@@ -139,30 +139,6 @@ Rules:
 - If the resolved meeting isn't the one the user meant, re-resolve rather
   than editing the note to fit.
 
-
-### Render it as an inline visual
-
-Present the finished output as an **inline visual in the chat response** —
-lightweight HTML rendered in the conversation itself, not an artifact in a
-side panel, and not plain markdown.
-
-Build it to be scannable at a glance:
-
-- **Card-style sections** for each block above, rather than one run of text.
-- **Badges** for short labelled values (stage, amount, owner, dates).
-- **Colour accents on status and risk fields**: red for
-  at-risk/blocked/overdue, amber for needs-attention, green for
-  on-track/confirmed. Colour carries meaning, so keep the word alongside it
-  and leave fields with no status semantics uncoloured.
-- Keep prose in the surrounding chat message. The visual holds the
-  structured result; caveats and next steps go in the text around it.
-- A missing value stays visible as "not stated". A tidy card is not a reason
-  to drop a gap this skill is required to surface.
-
-Fall back to the markdown above when inline visuals aren't available — in
-Claude Code, on mobile, or wherever HTML can't render. Say which you did
-only if the user asked for a specific format.
-
 ## Tips
 
 1. **Name the company and the time** — "Meridian tomorrow" resolves in one
