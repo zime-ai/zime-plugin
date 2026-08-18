@@ -133,6 +133,7 @@ zime-plugin/
 ├── validate-skills.sh
 ├── AGENTS.md                # rules for AI agents working in this repo
 ├── EVALS.md
+├── SKILLS-AND-LEARNINGS.md  # the skill set by layer + design retrospective
 └── README.md
 ```
 
