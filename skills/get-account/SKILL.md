@@ -116,6 +116,30 @@ Rules:
 - A field the record doesn't carry is shown as absent, not guessed.
 - Keep the `Account ID` line: later skills pin to it.
 
+
+### Render it as a visual artifact
+
+Present the finished output as a self-contained HTML artifact rather than
+plain markdown in the chat, so it's scannable at a glance:
+
+- **Card-style sections** for each block above, not one long wall of text.
+- **Badges** for short labelled values (stage, status, owner, dates).
+- **Light colour accents on status and risk fields only** — red for
+  at-risk/blocked/overdue, amber for needs-attention, green for
+  on-track/confirmed. Colour carries meaning here, so never colour a field
+  that has no status semantics, and always keep the word as well as the
+  colour: colour alone is unreadable for anyone who can't distinguish it.
+- **Keep prose in the chat response, not in the artifact.** Caveats, what
+  you did, and what to do next belong in the surrounding message. The
+  artifact holds the structured result.
+- Every grounding rule above still applies. An artifact makes gaps *less*
+  visible, so a missing value stays visible as "not stated" rather than
+  being quietly dropped to keep a card tidy.
+
+Fall back to the markdown above when artifacts aren't available in the
+current environment (for example Claude Code in a terminal). Say which you
+did only if the user asked for a specific format.
+
 ## Tips
 
 1. **Domain beats name** — "acme.com" resolves more precisely than "Acme".

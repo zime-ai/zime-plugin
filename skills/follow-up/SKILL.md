@@ -155,6 +155,21 @@ Here's what we agreed:
 - Never state a discount, price, or contractual term the call didn't contain.
 - Always caption it as a draft. This skill does not send email.
 
+
+### Render it as a visual artifact
+
+Wrap **only the provenance caption and a summary of the commitments** in a
+self-contained HTML artifact — card-style, with badges for owner and due
+date and colour accents on status (red for overdue, green for confirmed).
+
+**The email body itself stays plain text in the chat response.** It is going
+to be copy-pasted into a mail client, so it must not carry artifact markup,
+and the existing no-markdown email style rules above still hold. If putting
+the email in an artifact would make it harder to copy cleanly, skip the
+artifact entirely and deliver plain text.
+
+Fall back to the markdown above when artifacts aren't available.
+
 ## Tips
 
 1. **Say the emphasis you want** — "short and push for the pilot" changes the

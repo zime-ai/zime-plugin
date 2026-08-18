@@ -119,6 +119,19 @@ Rules:
 - Anything you present in quotation marks elsewhere must have come from
   here, not from a synthesis tool's paraphrase.
 
+
+### Render it as a visual artifact
+
+Put the **header block** (call, date, attendees, linked deal) in a
+card-style HTML artifact with badges for the metadata fields.
+
+**The transcript stays verbatim.** Never re-style, re-wrap, truncate, or
+colour speaker turns to make them look tidier — this skill exists to return
+exactly what was said. A long transcript may go in the artifact below the
+header for scrolling, but the text is unaltered.
+
+Fall back to the markdown above when artifacts aren't available.
+
 ## Tips
 
 1. **Narrow the date range** — transcripts are big; the wrong one is costly.
